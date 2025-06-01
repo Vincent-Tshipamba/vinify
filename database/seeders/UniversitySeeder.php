@@ -1,0 +1,37 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\University;
+use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+class UniversitySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        University::insert([
+            [
+                'id' => 1, // Force l'ID pour mise à jour user
+                'name' => 'Université de Kinshasa',
+                'description' => 'Grande université publique',
+                'address' => 'Kinshasa, RDC',
+                'phone' => '123456789',
+                'admin_id' => 1, // On relie à l'admin déjà créé
+                'subscription_id' => 1
+            ],
+            [
+                'id' => 2,
+                'name' => 'Université de Lubumbashi',
+                'description' => 'Université dans le Katanga',
+                'address' => 'Lubumbashi, RDC',
+                'phone' => '987654321',
+                'admin_id' => 2,
+                'subscription_id' => 2
+            ],
+        ]);
+    }
+}
