@@ -14,9 +14,19 @@ use Illuminate\Support\Facades\Http;
 
 class TextAnalysisController extends Controller
 {
-    public function detectAIText (){
-        return view('jcrify.index');
+    public function detectAIText()
+    {
+        return view('vinify.index');
     }
+
+    public function detail($textAnalysisId)
+    {
+        $textAnalysis = TextAnalysis::find($textAnalysisId);
+        $similaritiesList = $textAnalysis->analysis_result['similarities']['similarities'];
+
+        return view('vinify.detail', compact('textAnalysis', 'similaritiesList'));
+    }
+
     public function analyzeFile(Request $request)
     {
         $text = $request->input('text');
@@ -29,25 +39,27 @@ class TextAnalysisController extends Controller
             $user = auth()->user();
             $hasSubscription = $user && $user->hasActiveSubscription();
 
-            if (!$hasSubscription && strlen($text) > 1000) {
-                return response()->json([
-                    'message' => 'Vous devez souscrire à un plan pour analyser plus de 1000 caractères.'
-                ], 403);
-            }
+            // if (!$hasSubscription && strlen($text) > 1000) {
+            //     return response()->json([
+            //         'error' => 'Vous devez souscrire à un plan pour analyser plus de 1000 caractères.'
+            //     ], 403);
+            // }
 
             // ✅ 1. Créer une entrée en base avant l’appel à l’API
             $analysis = TextAnalysis::create([
+                'analysis_result' => null,
                 'user_id' => $user?->id,
                 'content' => $text,
                 'is_ai_generated' => false,
                 'status' => 'pending',
             ]);
 
+            Log::info("Envoi à Flask...");
             // ✅ 2. Appel à l’API d’analyse
-            $response = Http::timeout(160)->post("http://127.0.0.1:5000/check-plagiarism", ['text' => $text]);
+            $response = Http::timeout(540)->post("http://127.0.0.1:5000/check-plagiarism", ['text' => $text]);
 
             if ($response->failed()) {
-                Log::error("Erreur API AI_DETECTION : " . $response->body());
+                Log::error("Erreur API DETECTION : " . $response->body());
 
                 $analysis->update([
                     'analysis_result' => json_encode(['error' => 'API failed']),
@@ -55,22 +67,21 @@ class TextAnalysisController extends Controller
                     'error_message' => 'Erreur de communication avec l’API.'
                 ]);
 
-                return response()->json(['message' => 'Erreur lors de l\'analyse AI.'], 500);
+                return response()->json(['error' => 'Erreur lors de l\'analyse AI.'], 500);
             }
 
             $result = $response->json();
+            // Log::info($result['similarities']['highlighted_text']);
 
             // ✅ 3. Mise à jour avec les résultats de l’API
             $analysis->update([
-                'analysis_result' => json_encode($result),
+                'highlighted_text' => $result['similarities']['highlighted_text'],
+                'analysis_result' => $result['similarities'],
                 'is_ai_generated' => isset($result['ai_generated_probability']) && $result['ai_generated_probability'] > 0.6, // ou autre seuil
                 'status' => 'success',
             ]);
 
-            return response()->json([
-                'data' => $result
-            ]);
-
+            return response()->json([$result, $analysis]);
         } catch (\Exception $e) {
             Log::error("Erreur AI_DETECTION : " . $e->getMessage());
 
@@ -87,7 +98,8 @@ class TextAnalysisController extends Controller
     }
 
 
-    public function extractText(Request $request){
+    public function extractText(Request $request)
+    {
         // Vérifier si un fichier a été uploadé
         if (!$request->hasFile('text')) {
             return response()->json(['error' => 'Aucun fichier fourni'], 400);
@@ -95,7 +107,7 @@ class TextAnalysisController extends Controller
 
         $file = $request->file('text');
         $extension = strtolower($file->getClientOriginalExtension()); // Convertir en minuscule
-
+        Log::info('Extension du fichier fourni : ' . $extension);
         try {
             switch ($extension) {
                 case 'pdf':
@@ -122,10 +134,10 @@ class TextAnalysisController extends Controller
 
             return response()->json(['text' => $text], 200);
         } catch (\Exception $e) {
+            // Log::error("$e");
             return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
         }
     }
-
 
     /**
      * Extraire le texte d'un fichier PDF.
@@ -134,7 +146,12 @@ class TextAnalysisController extends Controller
     {
         $parser = new Parser();
         $pdf = $parser->parseFile($file->getRealPath());
-        return $pdf->getText();
+        $pages = $pdf->getPages();
+        $text = '';
+        foreach ($pages as $page) {
+            $text .= $page->getText() . "\n";
+        }
+        return trim($text);
     }
 
     /**
@@ -143,22 +160,20 @@ class TextAnalysisController extends Controller
     private function extractTextFromWord($file)
     {
         try {
-            $zip = new \ZipArchive();
-            if ($zip->open($file->getRealPath()) === true) {
-                $xmlContent = $zip->getFromName('word/document.xml');
-                $zip->close();
+            $response = Http::attach(
+                'file',
+                fopen($file->getRealPath(), 'rb'),
+                $file->getClientOriginalName()
+            )->post('http://127.0.0.1:5000/extract-text/docx'); // ton endpoint Flask
 
-                if ($xmlContent) {
-                    // Extraire le texte en supprimant les balises XML
-                    $text = strip_tags($xmlContent);
-                    return trim($text);
-                }
+            if ($response->successful()) {
+                return trim($response->json()['text'] ?? '');
+            } else {
+                throw new \Exception("Erreur Flask : " . $response->body());
             }
-
-            throw new \Exception("Impossible d'ouvrir le fichier Word.");
         } catch (\Exception $e) {
-            return ;
+            Log::error("Erreur extraction DOCX : " . $e->getMessage());
+            return null;
         }
     }
-
 }
