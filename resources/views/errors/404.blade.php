@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/5100/5100994.png" type="image/x-icon">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <title>{{ config('app.name', 'Jcrify') }}</title>
+    <title>{{ config('app.name', 'Vinify') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
