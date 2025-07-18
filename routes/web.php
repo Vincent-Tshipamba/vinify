@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UniversityController;
@@ -12,13 +13,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardController::class,'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/subscription', [UniversityController::class, 'index'])->name('subscription.index');
     Route::post('/universities', [UniversityController::class, 'store']);
     Route::post('/plagiarism-check', [TextAnalysisController::class, 'analyzeFile']);
     Route::get('/ai-detection', [TextAnalysisController::class, 'detectAIText'])->name('ai-detection');
+    Route::get('/ai-detection/{textAnalyseId}', [TextAnalysisController::class, 'detail'])->name('ai-detection-detail');
     Route::post('/upload-text', [TextAnalysisController::class, 'extractText'])->name('analyze.file');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
