@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Vinify') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -36,7 +36,7 @@
             <div>
                 <h1
                     class="text-4xl p-4 font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-blue-500 to-cyan-400 drop-shadow-lg">
-                    Jcrify Ai
+                    Vinify Ai
                 </h1>
 
                 <p class="mt-3 text-white">

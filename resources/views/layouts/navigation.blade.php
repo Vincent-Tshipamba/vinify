@@ -3,7 +3,7 @@
     <div>
       <a href="{{ route('dashboard') }}"
          class="text-2xl font-bold text-[#ff0] hover:text-yellow-400 transition-all duration-150 focus:outline-none">
-        Jcrify
+        Vinify
       </a>
     </div>
 
