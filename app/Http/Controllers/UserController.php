@@ -12,7 +12,8 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(){
+    public function index()
+    {
         $users = User::role('user')->get();
         return view('users.index', compact('users'));
     }
@@ -37,12 +38,12 @@ class UserController extends Controller
             $mail->addAddress($email); // Adresse du destinataire
             // Contenu
             $mail->isHTML(true); // Format d'email HTML
-            $mail->Subject = 'Bienvenue en tant qu\'utilisateur sur JCRify !';
+            $mail->Subject = 'Bienvenue en tant qu\'utilisateur sur Vinify !';
             $mail->Body = '
             <section style="max-width: 32rem; padding: 2rem 1.5rem; margin: auto; background-color: #ffffff; color: #333;">
                 <header>
                     <a href="#">
-                        JCRify
+                        Vinify
                     </a>
                 </header>
 
@@ -65,7 +66,7 @@ class UserController extends Controller
 
                     <p style="margin-top: 1rem; color: #4a5568;">
                         Merci, <br>
-                        L\'équipe JCRify
+                        L\'équipe Vinify
                     </p>
                 </main>
 
@@ -74,7 +75,7 @@ class UserController extends Controller
                         Ce courriel a été envoyé à <a href="#" class="text-blue-600 hover:underline dark:text-blue-400" target="_blank">' . $email . '</a>.
                         Si vous préférez ne pas recevoir ce type d\'e-mail, vous pouvez <a href="#" style="color: #1c64f2; ">gérer vos préférences en matière d\'e-mail.</a>.
                     </p>
-                    <p style="margin-top: 0.75rem; color: #6b7280">© ' . date('Y') . ' JCRify. Tous les droits sont réservés.</p>
+                    <p style="margin-top: 0.75rem; color: #6b7280">© ' . date('Y') . ' Vinify. Tous les droits sont réservés.</p>
                 </footer>
             </section>
             ';
