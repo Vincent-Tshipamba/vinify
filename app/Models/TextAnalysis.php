@@ -13,6 +13,8 @@ class TextAnalysis extends Model
         'user_id',
         'content',
         'similarities',
+        'highlighted_text',
+        'analysis_result',
         'is_ai_generated',
         'status',
         'error_message',
@@ -20,10 +22,11 @@ class TextAnalysis extends Model
 
     protected $casts = [
         'similarities' => 'array',
+        'analysis_result' => 'array',
         'ai_generated_probability' => 'float',
-    ];    public function user()
+    ];
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
-
 }
