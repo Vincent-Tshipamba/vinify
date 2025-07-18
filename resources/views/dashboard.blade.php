@@ -5,7 +5,7 @@
             Bienvenue, <span class="text-[#ff0] ">{{ auth()->user()->name }}</span> 👋
         </h1>
         <p class="text-gray-500 dark:text-gray-400 text-sm">
-            Heureux de vous revoir sur <span class="font-semibold text-[#ff0]">Jcrify</span>. N'oubliez pas de vérifier
+            Heureux de vous revoir sur <span class="font-semibold text-[#ff0]">Vinify</span>. N'oubliez pas de vérifier
             les derniers rapports ou documents.
         </p>
         {{-- <time>Mar 10, 2020</time> --}}
@@ -60,17 +60,18 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
 
+        <!--
         <article
             class="relative isolate flex flex-col justify-end overflow-hidden rounded-2xl  min-h-[410px]">
 
-            <!-- Image -->
+            {{-- <!-- Image --> --}}
             <img src="https://img.freepik.com/photos-gratuite/homme-noir-posant_23-2148171684.jpg" alt="User photo"
                 class="absolute inset-0 h-full w-full object-cover">
 
-            <!-- Gradient overlay pour améliorer lisibilité du bas -->
+            {{-- <!-- Gradient overlay pour améliorer lisibilité du bas --> --}}
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
 
-            <!-- Conteneur avec blur en bas -->
+            {{-- <!-- Conteneur avec blur en bas --> --}}
             <div class="relative z-10 backdrop-blur-sm bg-black/20 bg-opacity-40 p-4 ">
                 <h3 class="text-3xl sm:text-4xl font-light text-white">
                     {{ auth()->user()->name }}
@@ -78,9 +79,10 @@
                 <div class="text-sm leading-6 text-gray-300">Super Admin</div>
             </div>
         </article>
-
-        <x-chartline />
-        <x-chartline />
+        -->
+        <x-userchartline :users="$users" />
+        <x-analyseschartline :nbrAnalyses="$nbrAnalyses" />
+        <x-fichiersChartline :nbrAnalyses="$nbrAnalyses" />
     </div>
 
 
@@ -151,12 +153,12 @@
                 <div class="inline-flex items-center">
                     <a class="flex-none rounded-md text-xl inline-block text-[#ff0] font-semibold focus:outline-hidden focus:opacity-80"
                         href="#" aria-label="Preline">
-                        Jcrify
+                        Vinify
                     </a>
 
                     <div class="border-s border-neutral-700 ps-5 ms-5">
                         <p class="text-sm text-neutral-400">
-                            © 2025 Jcrify Labs.
+                            © 2025 Vinify Labs.
                         </p>
                     </div>
                 </div>
