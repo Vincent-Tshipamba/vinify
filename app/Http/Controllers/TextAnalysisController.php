@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessAnalyzeDocument;
+use App\Models\Document;
 use App\Models\User;
 use App\Models\TextAnalysis;
+use Dompdf\Dompdf;
 use Illuminate\Http\Request;
 use Smalot\PdfParser\Parser;
 use PhpOffice\PhpWord\IOFactory;
@@ -22,7 +25,7 @@ class TextAnalysisController extends Controller
     public function detail($textAnalysisId)
     {
         $textAnalysis = TextAnalysis::find($textAnalysisId);
-        $similaritiesList = $textAnalysis->analysis_result['similarities']['similarities'];
+        $similaritiesList = $textAnalysis->similarities;
 
         return view('vinify.detail', compact('textAnalysis', 'similaritiesList'));
     }
@@ -30,6 +33,37 @@ class TextAnalysisController extends Controller
     public function analyzeFile(Request $request)
     {
         $text = $request->input('text');
+        $id = $request->input('documentId');
+        $document = null;
+
+        if (!$id && $text) {
+            $pdf = new Dompdf();
+            $pdf->loadHtml(nl2br(e($text)));
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->render();
+
+            $pdfFileName = 'document_' . time() . '.pdf';
+            $pdfPath = storage_path("app/public/uploads/$pdfFileName");
+            file_put_contents($pdfPath, $pdf->output());
+            $fileUrl = asset("storage/uploads/$pdfFileName");
+
+            $document = Document::create([
+                'name' => $pdfFileName,
+                'file_url' => $fileUrl,
+                'content' => $text,
+                'has_been_analyzed' => false,
+                'user_id' => Auth::id(),
+            ]);
+
+            $id = $document->id; // On utilise l'ID du document créé pour l'analyse
+        } elseif ($id) {
+            $document = Document::find($id);
+            if (!$document) {
+                return response()->json(['message' => 'Document non trouvé.'], 404);
+            }
+        } else {
+            return response()->json(['message' => 'Veuillez soumettre soit un texte soit un fichier pour l\'analyse.'], 400);
+        }
 
         if (!$text) {
             return response()->json(['message' => 'Aucun texte fourni.'], 400);
@@ -47,68 +81,107 @@ class TextAnalysisController extends Controller
 
             // ✅ 1. Créer une entrée en base avant l’appel à l’API
             $analysis = TextAnalysis::create([
-                'analysis_result' => null,
+                'document_id' => $document->id,
                 'user_id' => $user?->id,
-                'content' => $text,
+                'highlighted_text' => null,
+                'similarities' => null,
+                'excerpted_text' => null,
+                'plagiarism_percentage' => 0,
                 'is_ai_generated' => false,
                 'status' => 'pending',
+                'error_message' => null,
             ]);
 
-            Log::info("Envoi à Flask...");
-            // ✅ 2. Appel à l’API d’analyse
-            $response = Http::timeout(540)->post("http://127.0.0.1:5000/check-plagiarism", ['text' => $text]);
+            $document->update(['has_been_analyzed' => true]);
 
-            if ($response->failed()) {
-                Log::error("Erreur API DETECTION : " . $response->body());
+            Log::info("Dispatching ProcessPlagiarismDetection job for TextAnalysis ID: {$analysis->id}");
 
-                $analysis->update([
-                    'analysis_result' => json_encode(['error' => 'API failed']),
-                    'status' => 'failed',
-                    'error_message' => 'Erreur de communication avec l’API.'
-                ]);
+            ProcessAnalyzeDocument::dispatch($analysis->id, $text);
 
-                return response()->json(['error' => 'Erreur lors de l\'analyse AI.'], 500);
-            }
-
-            $result = $response->json();
-            // Log::info($result['similarities']['highlighted_text']);
-
-            // ✅ 3. Mise à jour avec les résultats de l’API
-            $analysis->update([
-                'highlighted_text' => $result['similarities']['highlighted_text'],
-                'analysis_result' => $result['similarities'],
-                'is_ai_generated' => isset($result['ai_generated_probability']) && $result['ai_generated_probability'] > 0.6, // ou autre seuil
-                'status' => 'success',
-            ]);
-
-            return response()->json([$result, $analysis]);
+            return response()->json([
+                'message' => 'L\'analyse de votre document est en cours. Vous serez notifié lorsque tout sera fini.',
+                'analysis_id' => $analysis->id,
+                'document_id' => $document->id,
+                'status_url' => url('/api/analysis/' . $analysis->id . '/status') // URL pour le polling
+            ], 202);
         } catch (\Exception $e) {
-            Log::error("Erreur AI_DETECTION : " . $e->getMessage());
-
-            if (isset($analysis)) {
-                $analysis->update([
-                    'analysis_result' => json_encode(['error' => $e->getMessage()]),
-                    'status' => 'failed',
-                    'error_message' => $e->getMessage(),
-                ]);
-            }
-
-            return response()->json(['message' => 'Erreur interne du serveur'], 500);
+            Log::error("Erreur lors de la soumission de l'analyse pour le document ID {$id}: " . $e->getMessage());
+            return response()->json(['error' => 'Une erreur est survenue lors du traitement de votre demande.'], 500);
         }
     }
 
+    /**
+     * Récupère le statut et les résultats d'une analyse.
+     * Utilisé pour le polling côté client.
+     *
+     * @param TextAnalysis $analysis L'instance de l'analyse récupérée par route model binding.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAnalysisStatus(TextAnalysis $analysis)
+    {
+        if (!$analysis) {
+            return response()->json(['message' => 'Analyse introuvable.'], 404);
+        }
+
+        // if ($analysis->user_id !== Auth::id()) {
+        //     return response()->json(['message' => 'Accès non autorisé à cette analyse.'], 403);
+        // }
+
+        $data = [
+            'id' => $analysis->id,
+            'status' => $analysis->status,
+            'plagiarism_percentage' => $analysis->plagiarism_percentage,
+            'is_ai_generated' => $analysis->is_ai_generated,
+            'highlighted_text' => $analysis->highlighted_text,
+            'similarities_details' => $analysis->similarities,
+            'excerpted_text' => $analysis->excerpted_text,
+            'error_message' => $analysis->error_message,
+            'created_at' => $analysis->created_at,
+            'updated_at' => $analysis->updated_at,
+        ];
+        return response()->json($data);
+    }
+
+    private function convertDocxToPdf($file, $pdfPath){
+        // Charger le document Word
+        $phpWord = IOFactory::load($file->getRealPath());
+
+        // Sauvegarder temporairement en HTML
+        $tempHtml = tempnam(sys_get_temp_dir(), 'docx_html_') . '.html';
+        $xmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+        $xmlWriter->save($tempHtml);
+
+        // Lire le HTML
+        $htmlContent = file_get_contents($tempHtml);
+
+        // Convertir en PDF avec Dompdf
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($htmlContent);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Sauvegarder le dPDF
+        file_put_contents($pdfPath, $dompdf->output());
+
+        // Nettoyer le fichier HTML temporaire
+        @unlink($tempHtml);
+    }
 
     public function extractText(Request $request)
     {
         // Vérifier si un fichier a été uploadé
         if (!$request->hasFile('text')) {
-            return response()->json(['error' => 'Aucun fichier fourni'], 400);
+            return response()->json(['error' => 'Aucun contenu fourni'], 400);
         }
 
         $file = $request->file('text');
         $extension = strtolower($file->getClientOriginalExtension()); // Convertir en minuscule
-        Log::info('Extension du fichier fourni : ' . $extension);
         try {
+            $path = $file->store('uploads', 'public');
+
+            $fileUrl = asset('/storage/uploads/' . basename($path));
+            $fileName = $file->getClientOriginalName();
+            Log::info("File url : $fileUrl");
             switch ($extension) {
                 case 'pdf':
                     $text = $this->extractTextFromPdf($file);
@@ -116,6 +189,16 @@ class TextAnalysisController extends Controller
                 case 'doc':
                 case 'docx':
                     $text = $this->extractTextFromWord($file);
+                    // Générer le PDF
+                    $pdfFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.pdf';
+                    $pdfPath = storage_path("app/public/uploads/$pdfFileName");
+                    $this->convertDocxToPdf($file, $pdfPath);
+
+                    // Générer l'URL du PDF
+                    $pdfUrl = asset("storage/uploads/$pdfFileName");
+                    Log::info('Pdf Url for the converted document : ' . $pdfUrl);
+                    $fileUrl = $pdfUrl;
+                    $fileName = $pdfFileName;
                     break;
                 case 'txt':
                     $text = file_get_contents($file->getRealPath());
@@ -132,9 +215,21 @@ class TextAnalysisController extends Controller
                 return response()->json(['error' => 'Impossible d\'extraire le texte du fichier'], 500);
             }
 
-            return response()->json(['text' => $text], 200);
+            $document = Document::create([
+                'name' => $fileName,
+                'file_url' => $fileUrl,
+                'content' => $text,
+                'has_been_analyzed' => false,
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'text' => $text,
+                'file_url' =>$fileUrl,
+                'document_id' => $document->id,
+            ], 200);
         } catch (\Exception $e) {
-            // Log::error("$e");
+            Log::error("Error in extractText" . $e->getMessage());
             return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
         }
     }
