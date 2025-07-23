@@ -6,13 +6,15 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable,HasRoles;
+    use HasFactory, Notifiable,HasRoles, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -56,6 +58,11 @@ class User extends Authenticatable
     public function analyses()
     {
         return $this->hasMany(TextAnalysis::class);
+    }
+
+    public function documents(): HasMany 
+    {
+        return $this->hasMany(Document::class);
     }
 
     public function hasActiveSubscription()
