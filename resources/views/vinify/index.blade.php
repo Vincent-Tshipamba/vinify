@@ -220,10 +220,17 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.error(data)
+                        console.info(data)
                         if (data.error) {
                             Swal.fire("Erreur", data.error, "error");
                         } else {
+                            const extrait = data.text ? data.text.substring(0, 300) + (data.text.length > 300 ?
+                                "..." : "") : "";
+                            const fileUrl = data.file_url
+                            const extension = fileUrl.split('.').pop().toLowerCase();
+                            window.lastUploadedFileUrl = fileUrl;
+                            window.lastUploadedFileExtension = extension;
+                            window.documentId = data.document_id;
                             textArea.value = data.text;
                             textArea.dispatchEvent(new Event(
                                 'input')); // Déclencher l'event input pour ajuster la hauteur
@@ -241,6 +248,29 @@
             }
         });
 
+        document.addEventListener("click", function(e) {
+            if (e.target && e.target.classList.contains("voir-plus-btn")) {
+                const fileUrl = e.target.getAttribute("data-file");
+                const fileExtension = e.target.getAttribute("data-file-extension");
+                if (fileExtension === 'pdf') {
+                    Swal.fire({
+                        title: "Aperçu du fichier",
+                        html: `<iframe src="${fileUrl}" style="width:100%;height:500px;border:none;"></iframe>`,
+                        width: 800,
+                        showCloseButton: true,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Télécharger le fichier",
+                        html: `<a href="${fileUrl}" class="btn btn-primary" download>Télécharger le fichier</a>`,
+                        width: 800,
+                        showCloseButton: true,
+                        showConfirmButton: false
+                    });
+                }
+            }
+        });
 
         document.getElementById("analyzeBtn").addEventListener("click", function() {
             let textArea = document.getElementById("textArea");
@@ -249,7 +279,11 @@
             let answerDiv = document.getElementById("answer");
             let viewBox = document.getElementById("viewBox");
             let loader = document.getElementById("loading"); // Récupération du loader
-
+            const extrait = text ? text.substring(0, 500) + (text.length > 500 ? "..." : "") : "";
+            const fileUrl = window.lastUploadedFileUrl || "";
+            const extension = window.lastUploadedFileExtension || "";
+            console.log('fileUrl : ', fileUrl);
+            console.log('extension : ', extension);
             if (!text) {
                 alert("Veuillez entrer du texte avant l'analyse.");
                 return;
@@ -258,22 +292,30 @@
             // Afficher le texte analysé
             viewBox.innerHTML += `
                     <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
-                         <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-600">
-                                    <span class="text-sm font-medium text-white">AZ</span>
-                                </span>
+                        <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-600">
+                            <span class="text-sm font-medium text-white">AZ</span>
+                        </span>
                         <div class="max-w-4xl mx-auto sticky bottom-0 z-10 p-4 sm:py-5 bg-white/10 dark:bg-neutral-800/50 backdrop-blur-lg border-t border-gray-200 dark:border-neutral-700 shadow-md rounded-xl">
                             <div class="max-w-2xl flex gap-x-2 sm:gap-x-4">
-                               
-
                                 <div id="answer" class="grow mt-2 space-y-3">
-                                     <p class="text-white  text-sm">${text}</p>
+                                    <p class="text-white  text-sm">${extrait}</p>
+                                    <div class="grow">
+                                        <button type="button" class="voir-plus-btn mt-2 py-1 px-3 rounded bg-yellow-300 text-gray-900" data-file="${fileUrl}" data-file-extension="${extension}">Voir le document en entier</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </li>
-
-
             `;
+            let statusMessageDiv = document.createElement('div');
+            statusMessageDiv.id = 'analysis-status-message'; // Give it an ID to update later
+            statusMessageDiv.className = 'max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4';
+            statusMessageDiv.innerHTML = `
+                <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
+                    Contenu soumis avec succès. Veuillez patienter pendant l'analyse...
+                </p>
+            `;
+            viewBox.appendChild(statusMessageDiv);
             textArea.value = "";
             textArea.style.height = "auto";
 
@@ -289,87 +331,42 @@
                             "content")
                     },
                     body: JSON.stringify({
-                        text: text
+                        text: text,
+                        documentId: window.documentId,
                     })
                 })
-                .then(response => response.json())
-                .then(result => {
-                    console.log('Received response : ', result)
-                    const data = result[0];
-                    const analyse = result[1];
-                    window.similaritiesList = data.similarities.similarities.similarities || [];
-                    if (data.error) {
-                        console.error(data.error);
-                        // replace with original content
-                        return;
+                .then(response => {
+                    if (!response.ok) {
+                        // If response is not 2xx, throw an error
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'Server error');
+                        });
                     }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Job dispatch response:', data);
 
-                    viewBox.innerHTML += `
-                        <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
-                            <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-gray-500 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:bg-neutral-800">
-                                Analyse terminée avec succès ✅
+                    document.getElementById("viewBox").innerHTML += `
+                        <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
+                            <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
+                                ${data.message}
                             </p>
                         </div>
                     `;
-
-                    const similarities = window.similaritiesList;
-                    // let totalSimilarity = 0;
-                    // let averageSimilarity = 0;
-                    const pourcentage = data.similarities.plagiarism_percentage;
-                    console.log(`Pourcentage de plagiat : ${pourcentage}`);
-                    let highlightedText = data.similarities.highlighted_text ||
-                        "Aucun texte mis en surbrillance.";
-
-                    // Calcul de la moyenne
-                    // if (similarities.length > 0) {
-                    //     totalSimilarity = similarities.reduce((sum, item) => sum + (item
-                    //         .similarity_percentage || 0), 0);
-                    //     averageSimilarity = totalSimilarity / similarities.length;
-                    // }
-
-                    const excerpts = data.similarities.similarities.excerpted_text || [];
-
-                    if (excerpts && excerpts.length > 0) {
-                        excerpts.forEach(ex => {
-                            viewBox.innerHTML += `
-                                <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 gap-x-2 sm:gap-x-4 mx-auto dark:bg-neutral-800 dark:text-neutral-400 text-gray-500 p-3 rounded">
-                                    ${ex.highlighted}
-                                </div>
-                            `;
-                        });
-                        viewBox.innerHTML += `
-                            <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 gap-x-2 sm:gap-x-4 mx-auto dark:bg-neutral-800 dark:text-green-400 text-gray-500 p-3 rounded">
-                                <strong>Pourcentage de plagiat : </strong>${pourcentage.toFixed(1)}%
-                            </div>
-                        `;
-                        viewBox.innerHTML += `
-                        <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex flex-column gap-x-2 sm:gap-x-4">
-                            <a href="/ai-detection/${analyse.id}" type="button"
-                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
-                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                    <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd"/>
-                                </svg>
-
-                                Voir le document entier avec les résultats de l'analyse
-                            </a>
-                        </div>
-                    `
+                    if (data.analysis_id) {
+                        listenForAnalysisResults(data.analysis_id, statusMessageDiv, viewBox, loader);
                     } else {
-                        viewBox.innerHTML += `
-                            <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
-                                <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-green-500 dark:text-neutral-400 dark:bg-neutral-800">
-                                    Rien à signaler dans votre document. Tout est ✅.
-                                </p>
-                            </div>
-                        `;
+                        alert('Erreur: L\'ID d\'analyse n\'a pas été renvoyé.');
+                        resetUI(loader);
                     }
                 })
                 .catch(error => {
                     console.error("Erreur:", error);
                     viewBox.innerHTML +=
                         `
-                         <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
-                           <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-800">
+                        <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
+                            <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-800">
                                     <span class="text-sm font-medium text-white">JC</span>
                                 </span>
                             <div class="grow max-w-[90%] md:max-w-2xl w-full space-y-3">
@@ -377,7 +374,7 @@
 
                                 <div id="result"
                                     class="mt-3 flex-none min-w-full bg-gray-800 font-mono text-sm p-5 rounded-lg dark:bg-neutral-800 dark:text-neutral-200">
-                                       <strong>Erreur :</strong> Impossible d'analyser le texte.${error}
+                                    <strong>Erreur :</strong> Impossible d'analyser le texte.${error}
                                 </div>
 
                                 <!-- Button Group -->
@@ -456,10 +453,179 @@
                 })
                 .finally(() => {
                     // Cacher le loader et réactiver le bouton après la requête
-                    loader.style.display = "none";
+                    // loader.style.display = "none";
                     document.getElementById("analyzeBtn").disabled = false;
                 });
         });
+
+        function listenForAnalysisResults(analysisId, statusMessageDiv, resultsContainerDiv, loaderElement) {
+            console.log('Listening for analysis on channel:', `plagiarism-analysis.${analysisId}`);
+            console.log('Echo:', window.Echo);
+            if (window.Echo) {
+                console.log('Leaving the channel: ', `plagiarism-analysis.${analysisId}`)
+                window.Echo.leave(`plagiarism-analysis.${analysisId}`);
+            } else {
+                console.warn('Laravel Echo n\'est pas initialisé. Le broadcasting ne fonctionnera pas.');
+                return;
+            }
+
+            // Écoute le canal spécifique à cette analyse
+            window.Echo.channel(`plagiarism-analysis.${analysisId}`)
+                .listen('.analysis-completed', (e) => {
+                    console.log('Analysis completed event received:', e);
+                    let statusText = '';
+                    let statusColorClass = '';
+                    const textAnalysisId = e.textAnalysisId;
+                    const status = e.status;
+
+                    if (status === 'completed') {
+                        statusText = 'Analyse terminée avec succès ✅';
+                        statusColorClass = 'text-green-500';
+                    } else {
+                        statusText = `Analyse échouée ❌`;
+                        statusColorClass = 'text-red-500';
+                    }
+
+                    statusMessageDiv.innerHTML = `
+                            <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent ${statusColorClass} dark:text-neutral-400 dark:bg-neutral-800">
+                                ${statusText}
+                            </p>
+                        `;
+
+                    fetch(`/api/analysis/${textAnalysisId}/status`, {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => {
+                                    throw new Error(err.message ||
+                                        'Erreur lors de la récupération des détails de l\'analyse.');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(analysisData => {
+                            console.log('Full analysis data retrieved from API:', analysisData);
+
+                            displayAnalysisResults(analysisData, resultsContainerDiv);
+
+                            // Déclencher la notification pour l'utilisateur
+                            let notificationTitle = "Analyse de Plagiat Terminée !";
+                            let notificationMessage =
+                                `L'analyse de votre document (ID: ${analysisData.id}) est ${analysisData.status === 'completed' ? 'terminée avec succès.' : 'échouée.'}`;
+                            let notificationUrl =
+                                `/ai-detection/${analysisData.id}`;
+
+                            showBrowserNotification(notificationTitle, notificationMessage, notificationUrl);
+                        })
+                        .catch(error => {
+                            console.error("Erreur lors de la récupération des détails de l'analyse via l'API:",
+                                error);
+                            // Mettre à jour l'UI avec un message d'erreur si la récupération API échoue
+                            resultsContainerDiv.innerHTML += `
+                                <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4 text-red-500">
+                                    <p>Erreur critique: Impossible de récupérer les résultats détaillés de l'analyse: ${error.message}</p>
+                                </div>
+                            `;
+                            showBrowserNotification("Erreur d'analyse",
+                                `Impossible de récupérer les résultats de l'analyse (ID: ${textAnalysisId}).`
+                            );
+                        })
+                        .finally(() => {
+                            resetUI(loaderElement); // Masquer le loader et réactiver le bouton
+                            window.Echo.leave(
+                                `plagiarism-analysis.${textAnalysisId}`
+                                );
+                        });
+                })
+                .error((error) => {
+                    console.error('WebSocket Error on channel ' + `plagiarism-analysis.${analysisId}` + ':', error);
+                    statusMessageDiv.innerHTML = `
+                        <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-red-500 dark:text-neutral-400 dark:bg-neutral-800">
+                            Erreur de connexion en temps réel. Veuillez recharger la page.
+                        </p>
+                    `;
+                    resetUI(loaderElement); // Assurez-vous de réinitialiser l'UI même en cas d'erreur WebSocket
+                });
+        }
+
+        function displayAnalysisResults(data, resultsContainerDiv) {
+            const similarities = data.similarities;
+            const highlightedText = data.highlighted_text || "Aucun texte mis en surbrillance.";
+            const isAiGenerated = data.is_ai_generated;
+            const excerpts = data.excerpted_text ?? [];
+            const plagiarismPercentage = data.plagiarism_percentage ?? 0;
+
+            if (excerpts && excerpts.length > 0) {
+                excerpts.forEach(ex => {
+                    resultsContainerDiv.innerHTML += `
+                        <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
+                            ${ex.highlighted}
+                        </div>
+                    `;
+                });
+                resultsContainerDiv.innerHTML += `
+                    <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 gap-x-2 sm:gap-x-4 mx-auto dark:bg-neutral-800 dark:text-green-400 text-gray-500 p-3 rounded">
+                        <strong>Pourcentage de plagiat : </strong>${plagiarismPercentage.toFixed(1)}%
+                    </div>
+                    <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 gap-x-2 sm:gap-x-4 mx-auto dark:bg-neutral-800 ${isAiGenerated ? 'text-orange-500' : 'text-green-400'} text-gray-500 p-3 rounded">
+                        <strong>Généré par IA : </strong>${isAiGenerated ? 'Oui' : 'Non'}
+                    </div>
+                `;
+                resultsContainerDiv.innerHTML += `
+                    <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex flex-column gap-x-2 sm:gap-x-4">
+                        <a href="/ai-detection/${data.analysis_id}" type="button"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M4.998 7.78C6.729 6.345 9.198 5 12 5c2.802 0 5.27 1.345 7.002 2.78a12.713 12.713 0 0 1 2.096 2.183c.253.344.465.682.618.997.14.286.284.658.284 1.04s-.145.754-.284 1.04a6.6 6.6 0 0 1-.618.997 12.712 12.712 0 0 1-2.096 2.183C17.271 17.655 14.802 19 12 19c-2.802 0-5.27-1.345-7.002-2.78a12.712 12.712 0 0 1-2.096-2.183 6.6 6.6 0 0 1-.618-.997C2.144 12.754 2 12.382 2 12s.145-.754.284-1.04c.153-.315.365-.653.618-.997A12.714 12.714 0 0 1 4.998 7.78ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd"/>
+                            </svg>
+                            Voir le document entier avec les résultats de l'analyse
+                        </a>
+                    </div>
+                `;
+            } else {
+                resultsContainerDiv.innerHTML += `
+                    <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
+                        <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-green-500 dark:text-neutral-400 dark:bg-neutral-800">
+                            Rien à signaler dans votre document. Tout est ✅.
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        function resetUI(loaderElement) {
+            loaderElement.style.display = "none";
+            document.getElementById("analyzeBtn").disabled = false;
+        }
+
+        function showBrowserNotification(title, message, url = null) {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+
+            if (Notification.permission === "granted") {
+                const notification = new Notification(title, {
+                    body: message,
+                    icon: '/path/to/your/icon.png'
+                });
+
+                if (url) {
+                    notification.onclick = function(event) {
+                        event.preventDefault();
+                        window.open(url, '_blank');
+                        notification.close();
+                    };
+                }
+            } else {
+                alert(`${title}: ${message}`);
+            }
+        }
     </script>
     <script>
         document.addEventListener("click", function(e) {
