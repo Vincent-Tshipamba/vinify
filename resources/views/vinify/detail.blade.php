@@ -47,13 +47,13 @@
         </ul>
         <div id="default-tab-content"
             class="p-4 bg-gray-50 text-medium text-gray-500 dark:text-gray-400 dark:bg-gray-900 rounded-lg w-full">
-            <div class="hidden p-4 h-screen rounded-lg bg-gray-50 dark:bg-gray-900" id="preview-document" role="tabpanel"
-                aria-labelledby="preview-document-tab">
+            <div class="hidden p-4 h-screen rounded-lg bg-gray-50 dark:bg-gray-900" id="preview-document"
+                role="tabpanel" aria-labelledby="preview-document-tab">
                 @livewire('preview-document', ['textAnalysisId' => $textAnalysis->id])
             </div>
-            <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-900" id="scanned-document" role="tabpanel"
-                aria-labelledby="scanned-document-tab">
-                <pre class="bg-gray-900 text-white p-3 rounded overflow-auto whitespace-pre-wrap">{!! $textAnalysis->highlighted_text !!}</pre>
+            <div class="hidden p-4 overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 dark:bg-gray-900 dark:text-gray-50"
+                id="scanned-document" role="tabpanel" aria-labelledby="scanned-document-tab">
+                {!! $textAnalysis->highlighted_text !!}
             </div>
             <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-900" id="excerpted" role="tabpanel"
                 aria-labelledby="excerpted-tab">
@@ -93,11 +93,17 @@
             Swal.fire({
                 title: "Détail du plagiat",
                 html: `
-                    <p><strong>Phrase :</strong> ${data.plagiarized_text}</p>
-                    <p><strong>Similarité :</strong> ${data.similarity_percentage}%</p>
-                    <p><strong>Source :</strong> <a href="${data.link}" target="_blank">${data.title}</a></p>
+                    <div class="p-1 rounded-lg text-start">
+                        <p class="mb-2"><strong>Phrase :</strong> ${data.plagiarized_text}</p>
+                        <p class="mb-2"><strong>Similarité :</strong><span class="dark:text-[#ff0]"> ${data.similarity_percentage}%</span></p>
+                        <p class="mb-2 text-start" title="Cliquez pour suivre le lien de la source..."><strong>Source :</strong> <a href="${data.link}" target="_blank" class="underline" title="Cliquez pour suivre le lien de la source...">${data.title}</a></p>
+                    </div>
                 `,
-                icon: "info"
+                icon: "info",
+                customClass: {
+                    popup: 'bg-gray-200 dark:bg-gray-900 text-start text-black dark:text-gray-50 rounded-lg shadow-lg',
+                    confirmButton: 'dark:bg-[#ff0] dark:text-black font-bold py-2 px-4 rounded',
+                },
             });
         }
     </script>

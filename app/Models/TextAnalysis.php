@@ -23,6 +23,10 @@ class TextAnalysis extends Model
     ];
 
     protected $casts = [
+        // 'highlighted_text' => 'array',
+        'plagiarism_percentage' => 'float',
+        'is_ai_generated' => 'boolean',
+        'status' => 'string',
         'excerpted_text' => 'array',
         'similarities' => 'array',
     ];

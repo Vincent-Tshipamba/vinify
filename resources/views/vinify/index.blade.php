@@ -510,6 +510,7 @@
                             return response.json();
                         })
                         .then(analysisData => {
+                            window.similaritiesList = analysisData.similarities || [];
                             console.log('Full analysis data retrieved from API:', analysisData);
 
                             displayAnalysisResults(textAnalysisId, analysisData, resultsContainerDiv);
@@ -644,11 +645,17 @@
                     Swal.fire({
                         title: "Détail du plagiat",
                         html: `
-                            <p><strong>Phrase :</strong> ${similarData.plagiarized_text}</p>
-                            <p><strong>Similarité :</strong> ${similarData.similarity_percentage}%</p>
-                            <p><strong>Source :</strong> <a href="${similarData.link}" target="_blank">${similarData.title}</a></p>
+                            <div class="p-1 rounded-lg text-start">
+                                <p class="mb-2"><strong>Phrase :</strong> ${similarData.plagiarized_text}</p>
+                                <p class="mb-2"><strong>Similarité :</strong> ${similarData.similarity_percentage}%</p>
+                                <p class="mb-2 text-start" title="Cliquez pour suivre le lien de la source..."><strong>Source :</strong> <a href="${similarData.link}" target="_blank" class="underline">${similarData.title}</a></p>
+                            </div>
                         `,
-                        icon: "info"
+                        icon: "info",
+                        customClass: {
+                            popup: 'bg-gray-200 dark:bg-gray-900 text-start text-black dark:text-gray-50 rounded-lg shadow-lg',
+                            confirmButton: 'dark:bg-[#ff0] dark:text-black font-bold py-2 px-4 rounded',
+                        },
                     });
                 }
             }

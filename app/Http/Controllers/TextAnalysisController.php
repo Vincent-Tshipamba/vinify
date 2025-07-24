@@ -25,7 +25,7 @@ class TextAnalysisController extends Controller
     public function detail($textAnalysisId)
     {
         $textAnalysis = TextAnalysis::find($textAnalysisId);
-        $similaritiesList = $textAnalysis->similarities;
+        $similaritiesList = json_decode($textAnalysis->similarities);
 
         return view('vinify.detail', compact('textAnalysis', 'similaritiesList'));
     }
