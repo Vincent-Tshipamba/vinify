@@ -95,6 +95,8 @@ class ProcessAnalyzeDocument implements ShouldQueue
                     'status' => 'failed',
                     'error_message' => $errorMessage,
                 ]);
+                PlagiarismAnalysisCompleted::dispatch($this->text_analysis_id, 'failed');
+
                 Log::error("Erreur API Flask pour TextAnalysis ID: {$this->text_analysis_id}. {$errorMessage}");
             }
         } catch (\Exception $e) {

@@ -175,7 +175,7 @@ class TextAnalysisController extends Controller
         }
 
         $file = $request->file('text');
-        $extension = strtolower($file->getClientOriginalExtension()); // Convertir en minuscule
+        $extension = strtolower($file->getClientOriginalExtension());
         try {
             $path = $file->store('uploads', 'public');
 
