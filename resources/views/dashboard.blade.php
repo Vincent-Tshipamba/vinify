@@ -11,7 +11,6 @@
         {{-- <time>Mar 10, 2020</time> --}}
     </div>
 
-
     <div class="flex items-center justify-between mt-6">
         <div>
             <div class="ldBar" style="width:100%;height:60px",
@@ -20,10 +19,10 @@
         </div>
         <div class="flex flex-wrap items-start gap-6">
             <!-- Stat block -->
-            @foreach ([['route' => 'profile.edit', 'title' => 'Users', 'value' => 76, 'icon' => 'users'], ['route' => '#', 'title' => 'Analyse', 'value' => 260, 'icon' => 'analyse'], ['route' => '#', 'title' => 'Fichiers', 'value' => 76, 'icon' => 'file']] as $stat)
+            @foreach ([['route' => 'users.index', 'title' => 'Users', 'value' => $users, 'icon' => 'users'], ['route' => 'analyses.index', 'title' => 'Analyse', 'value' => $nbrAnalyses, 'icon' => 'analyse'], ['route' => 'documents.index', 'title' => 'Fichiers', 'value' => $nbrDocuments, 'icon' => 'file']] as $stat)
                 <div class="flex flex-col items-start min-w-[120px] space-y-1">
                     <div class="flex items-center gap-2">
-                        <a href="{{ $stat['route'] }}"
+                        <a href="{{ route($stat['route']) }}"
                             class="bg-white/10 dark:bg-neutral-800/50 backdrop-blur-md rounded-full p-2 text-gray-600 dark:text-gray-300 hover:text-yellow-500 transition"
                             title="{{ $stat['title'] }}">
                             @if ($stat['icon'] === 'users')
@@ -81,8 +80,8 @@
         </article>
         -->
         <x-userchartline :users="$users" />
-        <x-analyseschartline :nbrAnalyses="$nbrAnalyses" />
-        <x-fichiersChartline :nbrAnalyses="$nbrAnalyses" />
+        <x-analyseschartline :nbrAnalyses="$nbrAnalyses" :percentageCriticalPlagiarism="$percentageCriticalPlagiarism" />
+        <x-fichiersChartline :nbrDocuments="$nbrDocuments" />
     </div>
 
 
