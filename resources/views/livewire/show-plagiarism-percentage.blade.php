@@ -1,0 +1,32 @@
+<div
+    class="flex flex-col items-center bg-white border-gray-200 rounded-lg shadow-sm md:flex-row w-full mx-auto hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
+    <img class="object-cover w-full rounded-t-lg h-full md:w-48 md:rounded-none md:rounded-s-lg"
+        src="{{ asset('vinify.png') }}" alt="">
+    {{-- <div class="flex flex-col justify-between p-4 leading-normal">
+        <h5 class="text-xl text-center font-bold tracking-tight text-gray-900 dark:text-white">
+            Pourcentage de plagiat détecté : {{ $percentage }}%
+        </h5>
+        <p class="mb-3 text-2xl text-start font-extrabold text-gray-700 {{ $percentage > 0 ? 'dark:text-red-500' : 'dark:text-green-500' }}">
+            {{ $percentage > 0 ? '(Plagiat détecté)' : '(Aucun plagiat détecté)' }}
+        </p>
+    </div> --}}
+    <div class="flex flex-col justify-between p-4 leading-normal">
+        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Pourcentage de plagiat détecté : <span
+                class="{{ $percentage > 0 ? $percentage < 15 ? 'dark:text-orange-500' : 'dark:text-red-500' : 'dark:text-green-500' }}">{{ $percentage }}%</span>
+        </h5>
+        <p class="mb-3 font-normal {{ $percentage > 0 ? $percentage < 15 ? 'dark:text-orange-500' : 'dark:text-red-500' : 'dark:text-green-500' }}">
+            @if ($percentage > 0)
+                @if ($percentage <= 15)
+                    (Plagiat modéré détecté)
+                @elseif($percentage > 15)
+                    (Plagiat critique détecté)
+                @else
+                    (Plagiat faible détecté)
+                @endif
+            @else
+                (Aucun plagiat détecté)
+            @endif
+        </p>
+    </div>
+    </d>
