@@ -17,9 +17,16 @@ use Illuminate\Support\Facades\Http;
 
 class TextAnalysisController extends Controller
 {
+    public function index()
+    {
+        $analyses = TextAnalysis::where('user_id', Auth::id())->latest()->paginate(10);
+        
+        return view('vinify.analyses.index', compact('analyses'));
+    }
+
     public function detectAIText()
     {
-        return view('vinify.index');
+        return view('vinify.analyses.create');
     }
 
     public function detail($textAnalysisId)
@@ -27,7 +34,7 @@ class TextAnalysisController extends Controller
         $textAnalysis = TextAnalysis::find($textAnalysisId);
         $similaritiesList = json_decode($textAnalysis->similarities);
 
-        return view('vinify.detail', compact('textAnalysis', 'similaritiesList'));
+        return view('vinify.analyses.show', compact('textAnalysis', 'similaritiesList'));
     }
 
     public function analyzeFile(Request $request)

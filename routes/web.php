@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UniversityController;
 use App\Http\Controllers\SubscriptionController;
@@ -17,11 +18,19 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 
 Route::middleware('auth')->group(function () {
     Route::get('/subscription', [UniversityController::class, 'index'])->name('subscription.index');
+    
     Route::post('/universities', [UniversityController::class, 'store']);
+    
     Route::post('/plagiarism-check', [TextAnalysisController::class, 'analyzeFile']);
-    Route::get('/ai-detection', [TextAnalysisController::class, 'detectAIText'])->name('ai-detection');
-    Route::get('/ai-detection/{textAnalyseId}', [TextAnalysisController::class, 'detail'])->name('ai-detection-detail');
+
+    Route::get('/text-analyses/', [TextAnalysisController::class, 'index'])->name('analyses.index');
+    Route::get('/analyses', [TextAnalysisController::class, 'detectAIText'])->name('ai-detection');
+    Route::get('/analyses/{textAnalyseId}', [TextAnalysisController::class, 'show'])->name('ai-detection-detail');
+    
+    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+
     Route::post('/upload-text', [TextAnalysisController::class, 'extractText'])->name('analyze.file');
+    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
