@@ -29,7 +29,7 @@
     <meta property="og:image" content="https://preline.co/assets/img/og-image.png">
 
     <!-- Title -->
-    <title>{{ $title ?? 'AigleVente' }}</title>
+    <title>{{ $title ?? 'Vinify' }}</title>
 
     <!-- Favicon -->
     <link rel="shortcut icon" href="../../favicon.ico">

@@ -11,7 +11,7 @@
                     <!-- Logo -->
                     <a class="flex-none rounded-md text-xl inline-block text-[#ff0] font-semibold focus:outline-hidden focus:opacity-80"
                         href="../templates/agency/index.html" aria-label="Preline">
-                        Jcrify
+                        Vinify
                     </a>
                     <!-- End Logo -->
 
@@ -74,11 +74,11 @@
     <div class="bg-neutral-900">
         <div class="max-w-5xl mx-auto px-4 xl:px-0 pt-24 lg:pt-32 pb-24">
             <h1 class="font-semibold text-white text-5xl md:text-6xl">
-                <span class="text-[#ff0]">Jcrify:</span> Vérifiez. Corrigez. Protégez vos contenus.
+                <span class="text-[#ff0]">Vinify:</span> Vérifiez. Corrigez. Protégez vos contenus.
             </h1>
             <div class="max-w-4xl">
                 <p class="mt-5 text-neutral-400 text-lg">
-                    Jcrify est une plateforme intelligente de détection de plagiat qui vous aide à garantir l’originalité de
+                    Vinify est une plateforme intelligente de détection de plagiat qui vous aide à garantir l’originalité de
                     vos documents.
                     Que vous soyez étudiant, rédacteur ou professionnel, notre outil analyse vos textes, détecte les
                     similitudes,
@@ -358,7 +358,7 @@
             <div class="max-w-3xl mb-10 lg:mb-14">
                 <h2 class="text-white font-semibold text-2xl md:text-4xl md:leading-tight">Ils nous font confiance</h2>
                 <p class="mt-1 text-neutral-400">
-                    Jcrify a déjà aidé des dizaines d’étudiants, enseignants et professionnels à vérifier l’originalité de
+                    Vinify a déjà aidé des dizaines d’étudiants, enseignants et professionnels à vérifier l’originalité de
                     leurs textes. Découvrez ce qu’ils en pensent.
                 </p>
             </div>
@@ -371,7 +371,7 @@
                     <blockquote>
                         <p
                             class="font-medium text-xl text-white md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal">
-                            Grâce à Jcrify, j’ai pu détecter et corriger les passages similaires dans mon mémoire avant de
+                            Grâce à Vinify, j’ai pu détecter et corriger les passages similaires dans mon mémoire avant de
                             le soumettre. Un outil indispensable !
                         </p>
 
@@ -486,7 +486,7 @@
             <div class="max-w-3xl mb-10 lg:mb-14">
                 <h2 class="text-white font-semibold text-2xl md:text-4xl md:leading-tight">Notre méthode</h2>
                 <p class="mt-1 text-neutral-400">
-                    Chez <strong>Jcrify</strong>, nous combinons technologie et expertise linguistique pour détecter le
+                    Chez <strong>Vinify</strong>, nous combinons technologie et expertise linguistique pour détecter le
                     plagiat,
                     améliorer vos textes et garantir l'authenticité de vos contenus académiques ou professionnels.
                 </p>
@@ -498,7 +498,7 @@
                 <div class="aspect-w-16 aspect-h-9 lg:aspect-none">
                     <img class="w-full object-cover rounded-xl"
                         src="https://images.unsplash.com/photo-1587614203976-365c74645e83?q=80&w=480&h=600&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                        alt="Analyse de contenu Jcrify">
+                        alt="Analyse de contenu Vinify">
                 </div>
 
                 <!-- Timeline -->
@@ -886,12 +886,12 @@
                 <div class="inline-flex items-center">
                     <a class="flex-none rounded-md text-xl inline-block text-[#ff0] font-semibold focus:outline-hidden focus:opacity-80"
                         href="#" aria-label="Preline">
-                        Jcrify
+                        Vinify
                     </a>
 
                     <div class="border-s border-neutral-700 ps-5 ms-5">
                         <p class="text-sm text-neutral-400">
-                            © 2025 Jcrify  Labs.
+                            © 2025 Vinify  Labs.
                         </p>
                     </div>
                 </div>

@@ -1,7 +1,5 @@
 import './bootstrap';
-import "tailwindcss";
-import Alpine from 'alpinejs';
-import Swiper from "swiper";
+import "tailwindcss";import Swiper from "swiper";
 import $ from "jquery";
 import { createApp } from "vue";
 import MultiStepForm from "./components/MultiStepForm.vue";
@@ -14,9 +12,6 @@ app.mount("#app");
 
 
 window.$ = window.jQuery = $;
-window.Alpine = Alpine;
 const swiper = new Swiper();
-
-Alpine.start();
 
 
