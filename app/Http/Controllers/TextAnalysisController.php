@@ -19,8 +19,8 @@ class TextAnalysisController extends Controller
 {
     public function index()
     {
-        $analyses = TextAnalysis::where('user_id', Auth::id())->latest()->paginate(10);
-        
+        $analyses = TextAnalysis::where('user_id', Auth::id())->latest()->get();
+
         return view('vinify.analyses.index', compact('analyses'));
     }
 
@@ -29,7 +29,7 @@ class TextAnalysisController extends Controller
         return view('vinify.analyses.create');
     }
 
-    public function detail($textAnalysisId)
+    public function show($textAnalysisId)
     {
         $textAnalysis = TextAnalysis::find($textAnalysisId);
         $similaritiesList = json_decode($textAnalysis->similarities);

@@ -25,9 +25,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/text-analyses/', [TextAnalysisController::class, 'index'])->name('analyses.index');
     Route::get('/analyses', [TextAnalysisController::class, 'detectAIText'])->name('ai-detection');
-    Route::get('/analyses/{textAnalyseId}', [TextAnalysisController::class, 'show'])->name('ai-detection-detail');
+    Route::get('/analyses/{textAnalyseId}', [TextAnalysisController::class, 'show'])->name('analyses.show');
     
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
 
     Route::post('/upload-text', [TextAnalysisController::class, 'extractText'])->name('analyze.file');
     
@@ -42,6 +43,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/roles/update', [RolePermissionController::class, 'updateUserRole'])->name('users.roles.update');
     Route::post('/roles-permissions/update', [RolePermissionController::class, 'updateRolePermissions'])->name(name: 'roles.permissions.update');
 
+    Route::get('/contact', function () {
+        return view('vinify.contact');
+    })->name('contact');
 
     // Roles only
     Route::post('/roles/create', [RolePermissionController::class, 'createRole'])->name('roles.store');
