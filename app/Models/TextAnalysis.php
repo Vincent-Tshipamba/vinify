@@ -17,7 +17,9 @@ class TextAnalysis extends Model
         'highlighted_text',
         'excerpted_text',
         'plagiarism_percentage',
+        'ai_generated_probability',
         'is_ai_generated',
+        'ai_generated_label',
         'status',
         'error_message',
     ];

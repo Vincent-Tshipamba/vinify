@@ -11,6 +11,7 @@ class Document extends Model
     protected $fillable = [
         'name',
         'file_url',
+        'file_hash',
         'content',
         'has_been_analyzed',
         'user_id',
