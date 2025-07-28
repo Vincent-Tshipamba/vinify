@@ -9,6 +9,7 @@ class ShowPlagiarismPercentage extends Component
 {
     public $textAnalysisId;
     public $percentage = 0;
+    public $aiGeneratedProbability = 0;
 
     public function mount($textAnalysisId)
     {
@@ -21,6 +22,7 @@ class ShowPlagiarismPercentage extends Component
         $textAnalysis = TextAnalysis::find($this->textAnalysisId);
         if ($textAnalysis) {
             $this->percentage = $textAnalysis->plagiarism_percentage;
+            $this->aiGeneratedProbability = $textAnalysis->is_ai_generated ? (int) $textAnalysis->ai_generated_probability * 100 : 0;
         }
     }
 

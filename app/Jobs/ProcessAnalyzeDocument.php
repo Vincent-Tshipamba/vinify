@@ -55,7 +55,8 @@ class ProcessAnalyzeDocument implements ShouldQueue
                 $similaritiesData = $resultData['similarities']['similarities'] ?? [];
                 $excerptedText = $resultData['similarities']['excerpted_text'] ?? [];
                 $highlightedText = $resultData['highlighted_text'] ?? null;
-                $isAiGenerated = isset($result['ai_generated_probability']) && $result['ai_generated_probability'] > 0.6;
+                $aiGeneratedProbability = $result['ai_generated_probability'] ?? 0;
+                $isAiGenerated = $result['is_ai_generated'] ?? false;
                 $plagiarismPercentage = $resultData['plagiarism_percentage'] ?? 0;
 
                 $analysis->update([
@@ -63,7 +64,9 @@ class ProcessAnalyzeDocument implements ShouldQueue
                     'excerpted_text' => $excerptedText,
                     'similarities' => json_encode($similaritiesData),
                     'highlighted_text' => $highlightedText,
+                    'ai_generated_probability' => $aiGeneratedProbability * 100,
                     'is_ai_generated' => $isAiGenerated,
+                    'ai_generated_label' => $result['ai_generated_label'] ?? null,
                     'status' => 'completed',
                     'error_message' => null,
                 ]);
@@ -76,7 +79,7 @@ class ProcessAnalyzeDocument implements ShouldQueue
 
                 try {
                     Log::info("Dispatching PlagiarismAnalysisCompleted event...");
-                    
+
                     PlagiarismAnalysisCompleted::dispatch($this->text_analysis_id, 'completed');
 
                     Log::info("PlagiarismAnalysisCompleted BROADCAST ATTEMPTED SUCCESSFULLY. ✅");
@@ -105,7 +108,7 @@ class ProcessAnalyzeDocument implements ShouldQueue
                 'error_message' => 'Erreur inattendue: ' . $e->getMessage(),
             ]);
             Log::error("Exception pour TextAnalysis ID: {$this->text_analysis_id}. Erreur: " . $e->getMessage());
-            
+
             try {
                 PlagiarismAnalysisCompleted::dispatch($this->text_analysis_id, 'failed');
                 Log::info("FAILURE EVENT (from general exception) BROADCAST ATTEMPTED SUCCESSFULLY. ✅");
