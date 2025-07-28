@@ -282,8 +282,6 @@
             const extrait = text ? text.substring(0, 500) + (text.length > 500 ? "..." : "") : "";
             const fileUrl = window.lastUploadedFileUrl || "";
             const extension = window.lastUploadedFileExtension || "";
-            console.log('fileUrl : ', fileUrl);
-            console.log('extension : ', extension);
             if (!text) {
                 alert("Veuillez entrer du texte avant l'analyse.");
                 return;
@@ -559,6 +557,7 @@
             const similarities = data.similarities;
             const highlightedText = data.highlighted_text || "Aucun texte mis en surbrillance.";
             const isAiGenerated = data.is_ai_generated;
+            const aiGeneratedProbability = data.ai_generated_probability || 0;
             const excerpts = data.excerpted_text ?? [];
             const plagiarismPercentage = data.plagiarism_percentage ?? 0;
 
@@ -566,22 +565,22 @@
                 excerpts.forEach(ex => {
                     resultsContainerDiv.innerHTML += `
                         <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
-                            <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
+                            <p class="py-3 px-3 rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
                                 ${ex.highlighted}
                             </p>
                         </div>
                     `;
                 });
                 resultsContainerDiv.innerHTML += `
-                    <br/><hr/>
+                    <br/><hr class="border-t border-gray-200 dark:border-neutral-700 max-w-4xl mx-auto"/>
                     <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
                         <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
-                            <strong>Pourcentage de plagiat : </strong>${plagiarismPercentage.toFixed(1)}%
+                            <strong>Pourcentage de plagiat en ligne : </strong>${plagiarismPercentage.toFixed(1)}%
                         </p>
                     </div>
-                    <div class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 gap-x-2 sm:gap-x-4 mx-auto dark:bg-neutral-800 ${isAiGenerated ? 'text-orange-500' : 'text-green-400'} text-gray-500 p-3 rounded">
-                        <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
-                            <strong>Généré par IA : </strong>${isAiGenerated ? 'Oui' : 'Non'}
+                    <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
+                        <p class="py-2 px-3 rounded-full border border-transparent dark:text-neutral-400 dark:bg-neutral-800">
+                            ${isAiGenerated ? `La probabilité que ce texte soit généré par une IA est de <strong>${aiGeneratedProbability.toFixed(2)}%</strong>.` : `Ce texte est original à une probabilité de <strong>${aiGeneratedProbability.toFixed(1)}%</strong>.`}
                         </p>
                     </div>
                 `;

@@ -27,7 +27,17 @@
                             </th>
                             <th class="dark:bg-neutral-700">
                                 <span class="flex items-center">
-                                    Pourcentage de plagiat
+                                    Pourcentage de plagiat en ligne
+                                    <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="m8 15 4 4 4-4m0-6-4-4-4 4" />
+                                    </svg>
+                                </span>
+                            </th>
+                            <th class="dark:bg-neutral-700">
+                                <span class="flex items-center">
+                                    Pourcentage de génération par IA
                                     <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                         width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
@@ -59,13 +69,14 @@
                     </thead>
                     <tbody>
                         @foreach ($analyses as $key => $analysis)
-                            <tr class="hover:bg-neutral-800 hover:cursor-pointer hover:scale-100 transition-all duration-300 ease-in-out border-b" onclick=" window.location.href='{{ route('analyses.show', $analysis->id) }}'">
+            <tr class="hover:bg-neutral-800 hover:cursor-pointer hover:scale-100 transition-all duration-300 ease-in-out border-b ligne-analyse" onclick=" window.location.href='{{ route('analyses.show', $analysis->id) }}'" data-id="{{ $analysis->id }}">
                                 <td class="">{{ $key + 1 }}</td>
                                 <td class=""
                                     class="flex items-center px-6 py-4 hover:cursor-pointer hover:underline hover:text-[#e38407] hover:font-bold hover:scale-105 transition-all duration-300 ease-in-out">
                                     {{ $analysis->document->name }}
                                 </td>
                                 <td class="">{{ $analysis->plagiarism_percentage }}</td>
+                                <td class="">{{ $analysis->is_ai_generated ? $analysis->ai_generated_probability : 0 }}</td>
                                 <td class="">{{ $analysis->excerpted_text ? count($analysis->excerpted_text) : 0 }}</td>
                                 <td class="">{{ $analysis->created_at }}</td>
                             </tr>
@@ -76,7 +87,80 @@
         </div>
     </div>
 
+    <div id="custom-context-menu"
+        class="z-50 hidden fixed bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600">
+        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+            <li>
+                <a href="#" id="detail-link" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Voir les détails</a>
+            </li>
+            <li>
+                <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Télécharger un rapport</a>
+            </li>
+            <li>
+                <a href="#" id="delete-link" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Supprimer l'analyse
+                </a>
+            </li>
+        </ul>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@9.0.3"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const rows = document.querySelectorAll(".ligne-analyse");
+            const menu = document.getElementById("custom-context-menu");
+
+            // Masquer le menu si on clique ailleurs
+            document.addEventListener("click", () => {
+                menu.classList.add("hidden");
+            });
+
+            // Empêcher le menu par défaut et afficher le nôtre
+            rows.forEach(row => {
+                row.addEventListener("contextmenu", function (e) {
+                    e.preventDefault();
+
+                    // Positionner le menu à la souris
+                    menu.style.top = `${e.clientY}px`;
+                    menu.style.left = `${e.clientX}px`;
+
+                    // Afficher le menu
+                    menu.classList.remove("hidden");
+
+                    // Stocker l'ID ou autre pour les actions
+                    const analysisId = this.dataset.id;
+                    document.getElementById('delete-link').dataset.id = analysisId;
+                    document.getElementById("detail-link").setAttribute("href", `/analyses/${analysisId}`);
+                });
+            });
+
+            // Gérer le clic sur le lien de suppression
+            document.getElementById('delete-link').addEventListener('click', function (e) {
+                e.preventDefault();
+                const analysisId = this.dataset.id;
+
+                if (confirm("Êtes-vous sûr de vouloir supprimer cette analyse ?")) {
+                    fetch(`/analyses/${analysisId}/delete`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Erreur lors de la suppression de l'analyse.");
+                        }
+                    })
+                    .catch(error => console.error('Erreur:', error));
+                }
+            });
+        });
+    </script>
+
     <script>
         if (document.getElementById("analyses-table") && typeof simpleDatatables.DataTable !== 'undefined') {
             const exportCustomCSV = function(dataTable, userOptions = {}) {
