@@ -138,7 +138,9 @@ class TextAnalysisController extends Controller
             'id' => $analysis->id,
             'status' => $analysis->status,
             'plagiarism_percentage' => $analysis->plagiarism_percentage,
+            'ai_generated_probability' => $analysis->ai_generated_probability,
             'is_ai_generated' => $analysis->is_ai_generated,
+            'ai_generated_label' => $analysis->ai_generated_label,
             'highlighted_text' => $analysis->highlighted_text,
             'similarities_details' => $analysis->similarities,
             'excerpted_text' => $analysis->excerpted_text,
@@ -184,6 +186,19 @@ class TextAnalysisController extends Controller
         $file = $request->file('text');
         $extension = strtolower($file->getClientOriginalExtension());
         try {
+            // verifier si le fichier a déjà été uploadé
+            $hash = md5_file($file->getRealPath());
+            $existingDocument = Document::where('file_hash', $hash)->first();
+            
+            if ($existingDocument) {
+                Log::info("Document already exists with hash: $hash");
+                return response()->json([
+                    'text' => $existingDocument->content,
+                    'file_url' => $existingDocument->file_url,
+                    'document_id' => $existingDocument->id,
+                ], 200);
+            }
+
             $path = $file->store('uploads', 'public');
 
             $fileUrl = asset('/storage/uploads/' . basename($path));
@@ -225,6 +240,7 @@ class TextAnalysisController extends Controller
             $document = Document::create([
                 'name' => $fileName,
                 'file_url' => $fileUrl,
+                'file_hash' => $hash,
                 'content' => $text,
                 'has_been_analyzed' => false,
                 'user_id' => Auth::id(),
@@ -276,6 +292,27 @@ class TextAnalysisController extends Controller
         } catch (\Exception $e) {
             Log::error("Erreur extraction DOCX : " . $e->getMessage());
             return null;
+        }
+    }
+
+    public function delete($textAnalysisId)
+    {
+        $textAnalysis = TextAnalysis::find($textAnalysisId);
+        if (!$textAnalysis) {
+            return back()->with('error', 'Analyse introuvable.');
+        }
+
+        // Vérifier si l'utilisateur a le droit de supprimer cette analyse
+        if ($textAnalysis->user_id !== Auth::id()) {
+            return back()->with('error', 'Vous n\'êtes pas autorisé à supprimer cette analyse.');
+        }
+
+        try {
+            $textAnalysis->delete();
+            return back()->with('success', 'Analyse supprimée avec succès.');
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la suppression de l'analyse ID {$textAnalysis->id}: " . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'analyse.');
         }
     }
 }
