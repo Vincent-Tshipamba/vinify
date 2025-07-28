@@ -10,13 +10,13 @@
                 <div class="flex items-center">
                     <!-- Logo -->
                     <a class="flex-none rounded-md text-xl inline-block text-[#ff0] font-semibold focus:outline-hidden focus:opacity-80"
-                        href="../templates/agency/index.html" aria-label="Preline">
+                        href="{{ route('home') }}" aria-label="Preline">
                         Vinify
                     </a>
                     <!-- End Logo -->
 
-                    <div class="ms-1 sm:ms-2">
-
+                    <div class="ms-1 sm:ms-2 w-12">
+                        {{-- <img src="{{ asset('vinify.png') }}" alt="" srcset=""> --}}
                     </div>
                 </div>
 
@@ -48,20 +48,20 @@
                 aria-labelledby="hs-navbar-floating-dark-collapse">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-end gap-y-3 py-2 md:py-0 md:ps-7">
                     <a class="pe-3 ps-px sm:px-3 md:py-4 text-sm text-white hover:text-neutral-300 focus:outline-hidden focus:text-neutral-300"
-                        href="../templates/agency/index.html" aria-current="page">Home</a>
+                        href="../templates/agency/index.html" aria-current="page">Accueil</a>
                     <a class="pe-3 ps-px sm:px-3 md:py-4 text-sm text-white hover:text-neutral-300 focus:outline-hidden focus:text-neutral-300"
-                        href="#">Stories</a>
+                        href="#stories">Avis</a>
                     <a class="pe-3 ps-px sm:px-3 md:py-4 text-sm text-white hover:text-neutral-300 focus:outline-hidden focus:text-neutral-300"
                         href="#">Reviews</a>
                     <a class="pe-3 ps-px sm:px-3 md:py-4 text-sm text-white hover:text-neutral-300 focus:outline-hidden focus:text-neutral-300"
-                        href="#">Approach</a>
+                        href="#">Approche</a>
 
 
 
                     <div>
                         <a class="group inline-flex items-center gap-x-2 py-2 px-3 bg-[#ff0] font-medium text-sm text-neutral-800 rounded-full focus:outline-hidden"
-                            href="#">
-                            Contact us
+                            href="#contact">
+                            Nous contacter
                         </a>
                     </div>
                 </div>
@@ -74,16 +74,17 @@
     <div class="bg-neutral-900">
         <div class="max-w-5xl mx-auto px-4 xl:px-0 pt-24 lg:pt-32 pb-24">
             <h1 class="font-semibold text-white text-5xl md:text-6xl">
-                <span class="text-[#ff0]">Vinify:</span> Vérifiez. Corrigez. Protégez vos contenus.
+                <span class="text-[#ff0]">Vinify:</span> Scannez. Vérifiez. Corrigez. Protégez vos contenus.
             </h1>
             <div class="max-w-4xl">
                 <p class="mt-5 text-neutral-400 text-lg">
                     Vinify est une plateforme intelligente de détection de plagiat qui vous aide à garantir l’originalité de
                     vos documents.
                     Que vous soyez étudiant, rédacteur ou professionnel, notre outil analyse vos textes, détecte les
-                    similitudes,
-                    et vous propose des alternatives pour reformuler automatiquement les passages sensibles.
-                    Préservez votre crédibilité et respectez les normes d’originalité en toute simplicité.
+                    similitudes et indique à quel point un travail est plagié. <br>
+                    <span class="font-semibold">
+                        « Créer c'est oser penser par soi-même, copier c'est renoncer à se découvrir. »
+                    </span>
                 </p>
             </div>
         </div>
@@ -352,7 +353,7 @@
     <!-- End Case Stories -->
 
     <!-- Testimonials -->
-    <div class="bg-neutral-900">
+    <div class="bg-neutral-900" id="stories">
         <div class="max-w-5xl px-4 xl:px-0 py-10 lg:py-20 mx-auto">
             <!-- Title -->
             <div class="max-w-3xl mb-10 lg:mb-14">
@@ -365,8 +366,8 @@
             <!-- End Title -->
 
             <!-- Grid -->
-            <div class="md:grid md:grid-cols-2 md:gap-10 lg:gap-16 md:items-center">
-                <div>
+            <div class="md:grid md:grid-cols-3 md:gap-10 lg:gap-6 md:items-center justify-between">
+                <div class="justify-between col-span-2">
                     <!-- Blockquote -->
                     <blockquote>
                         <p
@@ -377,14 +378,12 @@
 
                         <footer class="mt-6">
                             <div class="flex items-center">
-                                <div class="md:hidden shrink-0">
-                                    <img class="size-12 rounded-full"
-                                        src="https://images.unsplash.com/photo-1671725501928-b7d85698ccd8?q=80&w=320&h=320&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                                        alt="Avatar">
+                                <div class=" shrink-0 me-4">
+                                    <img class="size-12 rounded-full" src="{{ asset('vini_pic.jpg') }}" alt="Avatar">
                                 </div>
-                                <div class="ms-4 md:ms-0">
-                                    <div class="text-base font-semibold text-white">Claire Mvutu</div>
-                                    <div class="text-xs text-neutral-400">Étudiante en droit | Université de Kinshasa</div>
+                                <div class="ms-6 md:ms-0">
+                                    <div class="text-base font-semibold text-white">Vincent Tshipamba</div>
+                                    <div class="text-xs text-neutral-400">Étudiante en génie logiciel | ISIPA Kinshasa</div>
                                 </div>
                             </div>
                         </footer>
@@ -393,10 +392,8 @@
                 </div>
                 <!-- End Col -->
 
-                <div class="hidden md:block mb-24 md:mb-0">
-                    <img class="rounded-xl"
-                        src="https://images.unsplash.com/photo-1671725501928-b7d85698ccd8?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                        alt="Avatar">
+                <div class="hidden md:block mb-24 md:mb-0 w-full">
+                    <img class="rounded-xl w-full h-96" src="{{ asset('vini_pic.jpg') }}" alt="Avatar">
                 </div>
                 <!-- End Col -->
             </div>
@@ -426,8 +423,8 @@
                                 <path d="M3 4h8" />
                             </svg>
                             <div class="mt-3 sm:mt-5">
-                                <h3 class="text-lg sm:text-3xl font-semibold text-white">2,000+</h3>
-                                <p class="mt-1 text-sm sm:text-base text-neutral-400">Preline partners</p>
+                                <h3 class="text-lg sm:text-3xl font-semibold text-white">{{ $nbrAnalyses }}+</h3>
+                                <p class="mt-1 text-sm sm:text-base text-neutral-400">Analyses effectuées</p>
                             </div>
                         </div>
                         <!-- End Stats -->
@@ -437,8 +434,7 @@
                             class="relative text-center first:before:hidden before:absolute before:-top-full sm:before:top-1/2 before:start-1/2 sm:before:-start-6 before:w-px before:h-20 before:bg-neutral-800 before:rotate-[60deg] sm:before:rotate-12 before:transform sm:before:-translate-y-1/2 before:-translate-x-1/2 sm:before:-translate-x-0 before:mt-3.5 sm:before:mt-0">
                             <div class="flex justify-center items-center -space-x-5">
                                 <img class="relative z-2 shrink-0 size-8 rounded-full border-3 border-neutral-800"
-                                    src="https://images.unsplash.com/photo-1601935111741-ae98b2b230b0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=320&h=320&q=80"
-                                    alt="Avatar">
+                                    src="{{ asset('vini_pic.jpg') }}" alt="Avatar">
                                 <img class="relative z-1 shrink-0 size-8 rounded-full border-3 border-neutral-800 -mt-7"
                                     src="https://images.unsplash.com/photo-1570654639102-bdd95efeca7a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=320&h=320&q=80"
                                     alt="Avatar">
@@ -447,8 +443,8 @@
                                     alt="Avatar">
                             </div>
                             <div class="mt-3 sm:mt-5">
-                                <h3 class="text-lg sm:text-3xl font-semibold text-white">85%</h3>
-                                <p class="mt-1 text-sm sm:text-base text-neutral-400">Happy customers</p>
+                                <h3 class="text-lg sm:text-3xl font-semibold text-white">{{ $nbrUsers }}+</h3>
+                                <p class="mt-1 text-sm sm:text-base text-neutral-400">Utilisateurs satisfaits</p>
                             </div>
                         </div>
                         <!-- End Stats -->
@@ -484,22 +480,23 @@
         <div class="max-w-5xl px-4 xl:px-0 py-10 lg:pt-20 mx-auto">
             <!-- Title -->
             <div class="max-w-3xl mb-10 lg:mb-14">
-                <h2 class="text-white font-semibold text-2xl md:text-4xl md:leading-tight">Notre méthode</h2>
+                <h2 class="text-white font-semibold text-2xl md:text-4xl md:leading-tight">Comment fonctionne <span
+                        class="text-[#ff0]">Vinify </span>?</h2>
                 <p class="mt-1 text-neutral-400">
-                    Chez <strong>Vinify</strong>, nous combinons technologie et expertise linguistique pour détecter le
-                    plagiat,
-                    améliorer vos textes et garantir l'authenticité de vos contenus académiques ou professionnels.
+                    Chez <strong>Vinify</strong>, nous combinons technologie de pointe et expertise linguistique pour
+                    détecter le plagiat et garantir l'authenticité de vos contenus académiques ou professionnels. Notre
+                    processus est conçu pour
+                    être à la fois efficace, précis et transparent.
                 </p>
             </div>
             <!-- End Title -->
 
             <!-- Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 lg:items-center">
-                <div class="aspect-w-16 aspect-h-9 lg:aspect-none">
-                    <img class="w-full object-cover rounded-xl"
-                        src="https://images.unsplash.com/photo-1587614203976-365c74645e83?q=80&w=480&h=600&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                        alt="Analyse de contenu Vinify">
-                </div>
+            {{-- <div class="aspect-w-16 aspect-h-9 lg:aspect-none">
+                <img class="w-full object-cover rounded-xl" src="{{ asset('vinify.png') }}"
+                    alt="Analyse de contenu Vinify">
+            </div> --}}
+            <div class="">
 
                 <!-- Timeline -->
                 <div>
@@ -519,8 +516,12 @@
                         <div class="grow pt-0.5 pb-8 sm:pb-12">
                             <p class="text-sm lg:text-base text-neutral-400">
                                 <span class="text-white">Analyse de contenu :</span>
-                                Nous scannons le document pour détecter les similitudes avec des sources existantes, grâce à
-                                un algorithme intelligent.
+                                Nous commençons par découper votre document en segments sémantiques (des groupes de phrases
+                                cohérentes) grâce à des techniques avancées de traitement du langage naturel (TLN),
+                                notamment avec SpaCy. Pour chaque segment, notre système effectue une recherche intelligente
+                                sur le web en utilisant des requêtes ciblées via l'API Serper (pour les résultats de
+                                Google). Les extraits les plus pertinents trouvés en ligne sont alors recueillis pour la
+                                comparaison.
                             </p>
                         </div>
                     </div>
@@ -536,9 +537,14 @@
                         </div>
                         <div class="grow pt-0.5 pb-8 sm:pb-12">
                             <p class="text-sm lg:text-base text-neutral-400">
-                                <span class="text-white">Suggestions de reformulation :</span>
-                                Pour chaque passage suspect, nous proposons une reformulation avec des synonymes ou des
-                                tournures originales.
+                                <span class="text-white">Détection de Similitudes :</span>
+                                C'est le cœur de notre méthode. Nous utilisons des modèles de "Sentence Transformers" (comme
+                                all-MiniLM-L6-v2) pour transformer chaque phrase de votre document et chaque extrait web en
+                                des représentations numériques (des vecteurs). Ensuite, nous calculons la similarité cosinus
+                                entre ces vecteurs. Un score élevé indique une forte ressemblance sémantique, nous
+                                permettant d'identifier précisément les passages potentiellement plagiés. Nous filtrons
+                                également les citations correctement référencées (notes de bas de page, bibliographie) pour
+                                éviter les faux positifs.
                             </p>
                         </div>
                     </div>
@@ -555,33 +561,33 @@
                         <div class="grow pt-0.5 pb-8 sm:pb-12">
                             <p class="text-sm md:text-base text-neutral-400">
                                 <span class="text-white">Vérification de l'originalité :</span>
-                                Une fois les modifications appliquées, un nouveau scan permet de s’assurer que le contenu
-                                est désormais unique.
+                                Une fois l'analyse terminée, Vinify vous fournit un rapport de plagiat complet et facile à
+                                comprendre. Ce rapport inclut :
+
+                                <li class="dark:text-neutral-400">Le pourcentage global de plagiat détecté dans votre
+                                    document.</li>
+
+                                <li class="dark:text-neutral-400">Une liste claire des sources originales identifiées, avec
+                                    des liens directs pour vous
+                                    permettre de les consulter.</li>
+
+                                <li class="dark:text-neutral-400">Votre texte original avec les passages suspects
+                                    clairement surlignés, accompagnés du
+                                    contexte et de la source de la similarité.</li><br>
+                            </p>
+                            <p class="dark:text-neutral-400 text-sm md:text-base">
+                                Ce rapport vous offre toutes les informations nécessaires pour réviser votre travail et
+                                assurer son originalité. Vous pouvez l'exporter pour vos archives ou pour attester de
+                                l'authenticité de votre contenu.
                             </p>
                         </div>
                     </div>
 
-                    <!-- Étape 4 -->
-                    <div class="flex gap-x-5 ms-1">
-                        <div
-                            class="relative last:after:hidden after:absolute after:top-8 after:bottom-0 after:start-4 after:w-px after:-translate-x-[0.5px] after:bg-neutral-800">
-                            <div class="relative z-10 size-8 flex justify-center items-center">
-                                <span
-                                    class="flex shrink-0 justify-center items-center size-8 border border-neutral-800 text-[#ff0] font-semibold text-xs uppercase rounded-full">4</span>
-                            </div>
-                        </div>
-                        <div class="grow pt-0.5 pb-8 sm:pb-12">
-                            <p class="text-sm md:text-base text-neutral-400">
-                                <span class="text-white">Export et rapport détaillé :</span>
-                                Recevez un rapport clair avec pourcentage de plagiat, sources détectées et suggestions
-                                intégrées.
-                            </p>
-                        </div>
-                    </div>
+
 
                     <!-- CTA -->
                     <a class="group inline-flex items-center gap-x-2 py-2 px-3 bg-[#ff0] font-medium text-sm text-neutral-800 rounded-full"
-                        href="#">
+                        href="#" onclick="call()">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -605,12 +611,12 @@
     <!-- End Approach -->
 
     <!-- Contact -->
-    <div class="bg-neutral-900">
+    <div class="bg-neutral-900" id="contact">
         <div class="max-w-5xl px-4 xl:px-0 py-10 lg:py-20 mx-auto">
             <!-- Title -->
             <div class="max-w-3xl mb-10 lg:mb-14">
-                <h2 class="text-white font-semibold text-2xl md:text-4xl md:leading-tight">Contact us</h2>
-                <p class="mt-1 text-neutral-400">Whatever your goal - we will get you there.</p>
+                <h2 class="text-white font-semibold text-2xl md:text-4xl md:leading-tight">Nous contacter</h2>
+                <p class="mt-1 text-neutral-400">Peu importe votre but, nous vous satisferons.</p>
             </div>
             <!-- End Title -->
 
@@ -623,12 +629,12 @@
                             <div class="relative">
                                 <input type="text" id="hs-tac-input-name"
                                     class="peer p-3 sm:p-4 block w-full bg-neutral-800 border-transparent rounded-lg sm:text-sm text-white placeholder:text-transparent focus:outline-hidden focus:ring-0 focus:border-transparent disabled:opacity-50 disabled:pointer-events-none
-                  focus:pt-6
-                  focus:pb-2
-                  not-placeholder-shown:pt-6
-                  not-placeholder-shown:pb-2
-                  autofill:pt-6
-                  autofill:pb-2"
+                                    focus:pt-6
+                                    focus:pb-2
+                                    not-placeholder-shown:pt-6
+                                    not-placeholder-shown:pb-2
+                                    autofill:pt-6
+                                    autofill:pb-2"
                                     placeholder="Name">
                                 <label for="hs-tac-input-name"
                                     class="absolute top-0 start-0 p-3 sm:p-4 h-full text-neutral-400 text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent peer-disabled:opacity-50 peer-disabled:pointer-events-none
@@ -637,7 +643,8 @@
                     peer-focus:text-neutral-400
                     peer-not-placeholder-shown:text-xs
                     peer-not-placeholder-shown:-translate-y-1.5
-                    peer-not-placeholder-shown:text-neutral-400">Name</label>
+                    peer-not-placeholder-shown:text-neutral-400">Votre
+                                    nom</label>
                             </div>
                             <!-- End Input -->
 
@@ -659,7 +666,8 @@
                     peer-focus:text-neutral-400
                     peer-not-placeholder-shown:text-xs
                     peer-not-placeholder-shown:-translate-y-1.5
-                    peer-not-placeholder-shown:text-neutral-400">Email</label>
+                    peer-not-placeholder-shown:text-neutral-400">Votre
+                                    adresse mail</label>
                             </div>
                             <!-- End Input -->
 
@@ -681,7 +689,7 @@
                     peer-focus:text-neutral-400
                     peer-not-placeholder-shown:text-xs
                     peer-not-placeholder-shown:-translate-y-1.5
-                    peer-not-placeholder-shown:text-neutral-400">Company</label>
+                    peer-not-placeholder-shown:text-neutral-400">Entreprise</label>
                             </div>
                             <!-- End Input -->
 
@@ -703,7 +711,8 @@
                     peer-focus:text-neutral-400
                     peer-not-placeholder-shown:text-xs
                     peer-not-placeholder-shown:-translate-y-1.5
-                    peer-not-placeholder-shown:text-neutral-400">Phone</label>
+                    peer-not-placeholder-shown:text-neutral-400">Numéro
+                                    de téléphone</label>
                             </div>
                             <!-- End Input -->
 
@@ -725,15 +734,15 @@
                     peer-focus:text-neutral-400
                     peer-not-placeholder-shown:text-xs
                     peer-not-placeholder-shown:-translate-y-1.5
-                    peer-not-placeholder-shown:text-neutral-400">Tell
-                                    us about your project</label>
+                    peer-not-placeholder-shown:text-neutral-400">Dites-nous
+                                    en quoi nous pouvons vous aider...</label>
                             </div>
                             <!-- End Textarea -->
                         </div>
 
                         <div class="mt-2">
                             <p class="text-xs text-neutral-500">
-                                All fields are required
+                                *Tous les champs sont requis
                             </p>
 
                             <p class="mt-5">
@@ -764,11 +773,11 @@
                             <circle cx="12" cy="10" r="3" />
                         </svg>
                         <div class="grow">
-                            <h4 class="text-white font-semibold">Our address:</h4>
+                            <h4 class="text-white font-semibold">Où nous trouver:</h4>
 
                             <address class="mt-1 text-neutral-400 text-sm not-italic">
-                                300 Bath Street, Tay House<br>
-                                Glasgow G2 4JR, United Kingdom
+                                1 Zongotolo, Kinshasa - Gombe, RDC. <br>
+                                République Démocratique du Congo
                             </address>
                         </div>
                     </div>
@@ -784,11 +793,11 @@
                             <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10" />
                         </svg>
                         <div class="grow">
-                            <h4 class="text-white font-semibold">Email us:</h4>
+                            <h4 class="text-white font-semibold">Email:</h4>
 
                             <a class="mt-1 text-neutral-400 text-sm hover:text-neutral-200 focus:outline-hidden focus:text-neutral-200"
                                 href="#mailto:example@site.co" target="_blank">
-                                hello@example.so
+                                contact@vinify.com
                             </a>
                         </div>
                     </div>
@@ -803,13 +812,14 @@
                             <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
                         </svg>
                         <div class="grow">
-                            <h4 class="text-white font-semibold">We're hiring</h4>
-                            <p class="mt-1 text-neutral-400">We're thrilled to announce that we're expanding our team and
-                                looking for talented individuals like you to join us.</p>
+                            <h4 class="text-white font-semibold">Nous engageons!</h4>
+                            <p class="mt-1 text-neutral-400">Nous sommes heureux d'annoncer que nous agrandissons notre
+                                équipe et
+                                nous recherchons des personnes talentueuses pour se joindre à notre aventure.</p>
                             <p class="mt-2">
                                 <a class="group inline-flex items-center gap-x-2 font-medium text-sm text-[#ff0] decoration-2 hover:underline focus:outline-hidden focus:underline"
                                     href="#">
-                                    Job openings
+                                    Intéressé.e?
                                     <svg class="shrink-0 size-4 transition group-hover:translate-x-0.5 group-hover:translate-x-0 group-focus:translate-x-0.5 group-focus:translate-x-0"
                                         xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -891,7 +901,7 @@
 
                     <div class="border-s border-neutral-700 ps-5 ms-5">
                         <p class="text-sm text-neutral-400">
-                            © 2025 Vinify  Labs.
+                            © 2025 Vinify Labs.
                         </p>
                     </div>
                 </div>

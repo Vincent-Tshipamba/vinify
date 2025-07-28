@@ -63,9 +63,8 @@
         @yield('content')
     </main>
 
-     <script src="https://cdn.jsdelivr.net/npm/preline/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/preline/dist/index.js"></script>
     <script src="https://preline.co/assets/vendor/prism/prism.js"></script>
-
 </body>
 
 </html>

@@ -14,23 +14,23 @@
             <ul class="flex items-center space-x-5 text-sm font-medium">
                 <li>
                     <a href="{{ route('dashboard') }}"
-                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('dashboard') ? 'font-bold dark:text-[#ff0]' : '' }} hover:text-yellow-500 transition-colors">Dashboard</a>
+                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('dashboard') ? 'font-bold dark:text-yellow-400' : '' }} hover:text-yellow-500 transition-colors">Dashboard</a>
                 </li>
                 <li>
                     <a href="{{ route('ai-detection') }}"
-                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('ai-detection') ? 'font-bold dark:text-[#ff0]' : '' }} hover:text-yellow-500 transition-colors">Scanner</a>
+                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('ai-detection') ? 'font-bold dark:text-yellow-400' : '' }} hover:text-yellow-500 transition-colors">Scanner</a>
                 </li>
                 <li>
                     <a href="{{ route('analyses.index') }}"
-                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('analyses.index', 'analyses.show') ? 'font-bold dark:text-[#ff0]' : '' }} hover:text-yellow-500 transition-colors">Analyses</a>
+                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('analyses.index', 'analyses.show') ? 'font-bold dark:text-yellow-400' : '' }} hover:text-yellow-500 transition-colors">Analyses</a>
                 </li>
                 <li>
                     <a href="{{ route('documents.index') }}"
-                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('documents.index') ? 'font-bold dark:text-[#ff0]' : '' }} hover:text-yellow-500 transition-colors">Documents</a>
+                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('documents.index') ? 'font-bold dark:text-yellow-400' : '' }} hover:text-yellow-500 transition-colors">Documents</a>
                 </li>
                 <li>
                     <a href="{{ route('contact') }}"
-                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('contact') ? 'font-bold dark:text-[#ff0]' : '' }} hover:text-yellow-500 transition-colors">Contact</a>
+                        class="text-gray-700 dark:text-gray-300 {{ request()->routeIs('contact') ? 'font-bold dark:text-yellow-400' : '' }} hover:text-yellow-500 transition-colors">Contact</a>
                 </li>
             </ul>
         </nav>
