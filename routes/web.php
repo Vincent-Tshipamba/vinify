@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use App\Models\TextAnalysis;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
@@ -11,8 +13,11 @@ use App\Http\Controllers\TextAnalysisController;
 use App\Http\Controllers\RolePermissionController;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    $nbrAnalyses = TextAnalysis::count();
+    $nbrUsers = User::count();
+
+    return view('welcome', compact('nbrAnalyses', 'nbrUsers'));
+})->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -26,7 +31,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/text-analyses/', [TextAnalysisController::class, 'index'])->name('analyses.index');
     Route::get('/analyses', [TextAnalysisController::class, 'detectAIText'])->name('ai-detection');
     Route::get('/analyses/{textAnalyseId}', [TextAnalysisController::class, 'show'])->name('analyses.show');
-    
+    Route::post('/analyses/{textAnalyseId}/delete', [TextAnalysisController::class, 'delete'])->name('analyses.delete');
+
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
 
