@@ -14,7 +14,8 @@ class DashboardController extends Controller
         $users = count(User::all());
         $nbrAnalyses = count(TextAnalysis::all());
         $nbrCriticalPlagiarism = TextAnalysis::where('plagiarism_percentage', '>', 15)->count();
-        $percentageCriticalPlagiarism = (int) ($nbrCriticalPlagiarism / $nbrAnalyses * 100);
+
+        $percentageCriticalPlagiarism = $nbrAnalyses > 0 ? (int) ($nbrCriticalPlagiarism / $nbrAnalyses * 100) : 0;
         $nbrDocuments = count(Document::all());
 
         return view('dashboard', compact('users', 'nbrAnalyses', 'nbrDocuments', 'nbrCriticalPlagiarism', 'percentageCriticalPlagiarism'));
