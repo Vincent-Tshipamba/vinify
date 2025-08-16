@@ -117,6 +117,70 @@ class TextAnalysisController extends Controller
         }
     }
 
+    public function analyzeDocument(Request $request)
+    {
+        if (!$request->hasFile('text')) {
+            return response()->json(['error' => 'Aucun fichier fourni'], 400);
+        }
+
+        $file = $request->file('text');
+        $hash = md5_file($file->getRealPath());
+        $existingDocument = Document::where('file_hash', $hash)->first();
+
+        // if ($existingDocument) {
+        //     Log::info("Document already exists with hash: $hash");
+            // Gérer le retour pour un document déjà analysé
+            // return response()->json([
+            //     'message' => 'Ce document a déjà été analysé.',
+            //     'document_id' => $existingDocument->id,
+            //     'analysis_id' => $existingDocument->analysis->id ?? null,
+            //     'status_url' => url('/api/analysis/' . $existingDocument->analysis->id . '/status')
+            // ], 200);
+        // }
+
+        // Le chemin relatif à storage/app
+        $path = $file->store('temp_uploads', 'public');
+
+        // Le chemin absolu sur le disque du serveur
+        $fullPathOnDisk = storage_path('app/public/' . $path);
+
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $fullPathOnDisk = str_replace('/', '\\', $fullPathOnDisk);
+        }
+        Log::info('Normalized path: ' . $fullPathOnDisk);
+
+        $document = Document::create([
+            'name' => $file->getClientOriginalName(),
+            'file_url' => $path, // On stocke le chemin relatif
+            'file_hash' => $hash,
+            'content' => '',
+            'has_been_analyzed' => false,
+            'user_id' => Auth::id(),
+        ]);
+
+        $analysis = TextAnalysis::create([
+            'document_id' => $document->id,
+            'user_id' => Auth::id(),
+            'status' => 'pending',
+            'is_ai_generated' => false,
+            'plagiarism_percentage' => 0,
+            'highlighted_text' => null,
+            'similarities' => null,
+            'excerpted_text' => null,
+            'error_message' => null,
+        ]);
+
+        // On lance le Job avec le chemin absolu sur le disque
+        ProcessAnalyzeDocument::dispatch($analysis->id, $fullPathOnDisk);
+
+        return response()->json([
+            'message' => 'L\'analyse de votre document est en cours.',
+            'analysis_id' => $analysis->id,
+            'document_id' => $document->id,
+            'status_url' => url('/api/analysis/' . $analysis->id . '/status')
+        ], 202);
+    }
+
     /**
      * Récupère le statut et les résultats d'une analyse.
      * Utilisé pour le polling côté client.

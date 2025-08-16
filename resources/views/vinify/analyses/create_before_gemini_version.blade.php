@@ -81,8 +81,7 @@
                         </div>
 
                         <!-- Upload fichier -->
-                        <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx" class="hidden"
-                            name="text">
+                        <input type="file" id="fileInput" accept=".txt,.pdf,.doc,.docx" class="hidden">
                         <label for="fileInput"
                             class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-white dark:hover:bg-neutral-700"
                             title="Importer un fichier">
@@ -197,6 +196,8 @@
             textArea.addEventListener("input", function() {
                 this.style.height = "auto";
                 this.style.height = (this.scrollHeight) + "px";
+
+                // Activer/désactiver le bouton
                 submitButton.disabled = this.value.trim() === "";
             });
 
@@ -206,12 +207,11 @@
 
                 let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                // Afficher le spinner et désactiver le bouton
+                // Afficher le spinner
                 loading.classList.remove("hidden");
-                submitButton.disabled = true;
+                submitButton.disabled = true; // Désactiver le bouton pendant l'upload
 
-                // **MODIFICATION ICI** : on appelle directement la nouvelle route d'analyse
-                fetch('/analyze-document', {
+                fetch('/upload-text', {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -220,40 +220,34 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.info(data);
+                        console.info(data)
                         if (data.error) {
                             Swal.fire("Erreur", data.error, "error");
                         } else {
-                            // L'API back-end renvoie directement le documentId et l'analysis_id
-                            // On peut le stocker pour le suivi du statut.
+                            const extrait = data.text ? data.text.substring(0, 300) + (data.text.length > 300 ?
+                                "..." : "") : "";
+                            const fileUrl = data.file_url
+                            const extension = fileUrl.split('.').pop().toLowerCase();
+                            window.lastUploadedFileUrl = fileUrl;
+                            window.lastUploadedFileExtension = extension;
                             window.documentId = data.document_id;
-                            window.analysisId = data.analysis_id;
-
-                            Swal.fire({
-                                title: "Analyse en cours",
-                                html: data.message,
-                                icon: "info",
-                                timer: 5000,
-                                showConfirmButton: false
-                            });
-
-                            // Optionnel : Vous pouvez aussi vider le textarea
-                            textArea.value = "";
-                            textArea.dispatchEvent(new Event('input'));
+                            textArea.value = data.text;
+                            textArea.dispatchEvent(new Event(
+                                'input')); // Déclencher l'event input pour ajuster la hauteur
                         }
                     })
                     .catch(error => {
                         console.error('Erreur:', JSON.stringify(error));
-                        Swal.fire("Erreur", "Une erreur s'est produite lors de l'analyse.", "error");
+                        Swal.fire("Erreur", "Une erreur s'est produite lors du téléchargement.", "error");
                     })
                     .finally(() => {
                         loading.classList.add("hidden");
-                        // Le bouton sera réactivé une fois le texte entré manuellement
-                        // ou si l'API a renvoyé une erreur qui permet de réessayer.
-                        submitButton.disabled = false;
+                        submitButton.disabled = textArea.value.trim() ===
+                            ""; // Réactiver si le texte est présent
                     });
             }
         });
+
         document.addEventListener("click", function(e) {
             if (e.target && e.target.classList.contains("voir-plus-btn")) {
                 const fileUrl = e.target.getAttribute("data-file");
@@ -460,89 +454,6 @@
                     // loader.style.display = "none";
                     document.getElementById("analyzeBtn").disabled = false;
                 });
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const dropZone = document.getElementById('textArea');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            // Prévenir le comportement par défaut (ouverture du fichier dans le navigateur)
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            // Gérer les effets visuels de glisser-déposer
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight(e) {
-                dropZone.classList.add('bg-blue-200', 'border-blue-500');
-                dropZone.classList.remove('bg-gray-100', 'border-gray-200');
-            }
-
-            function unhighlight(e) {
-                dropZone.classList.remove('bg-blue-200', 'border-blue-500');
-                dropZone.classList.add('bg-gray-100', 'border-gray-200');
-            }
-
-            // Gérer l'événement de dépôt
-            dropZone.addEventListener('drop', handleDrop, false);
-
-            async function handleDrop(e) {
-                const files = e.dataTransfer.files;
-                if (files.length === 0) return;
-
-                const file = files[0];
-
-                // Créer un objet FormData et y ajouter le fichier
-                const formData = new FormData();
-                formData.append('text', file); // 'text' est le nom du champ de fichier attendu par Laravel
-
-                try {
-                    // Envoyer le fichier au back-end en une seule étape
-                    const response = await fetch('/analyze-document', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken
-                        }
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Erreur lors de l\'analyse du document.');
-                    }
-
-                    const data = await response.json();
-                    console.log(data);
-
-                    // Vous pouvez afficher le message de succès à l'utilisateur ici
-                    alert(data.message);
-
-                    // Mettez à jour l'interface utilisateur pour le polling si nécessaire
-
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    alert(`Erreur: ${error.message}`);
-                }
-            }
-
-            // Gestion de la saisie directe dans le textarea (si nécessaire)
-            // Vous pouvez ajouter une logique pour soumettre le texte directement
-            // si l'utilisateur saisit du contenu au lieu de déposer un fichier.
-            // Cette partie dépend de votre logique métier.
-            // Par exemple, un bouton "Soumettre" qui prendrait le contenu du textarea.
-
         });
 
         function listenForAnalysisResults(analysisId, statusMessageDiv, resultsContainerDiv, loaderElement) {

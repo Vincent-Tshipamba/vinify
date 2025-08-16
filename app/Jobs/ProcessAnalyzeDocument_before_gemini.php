@@ -13,20 +13,25 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class ProcessAnalyzeDocument implements ShouldQueue
 {
     use Queueable;
-    public $text_analysis_id;
-    public $filePath; // Stocke maintenant le chemin du fichier, et non le texte
+    protected $text_analysis_id;
+    protected $content;
 
-    public function __construct($text_analysis_id, $filePath)
+    /**
+     * Create a new job instance.
+     */
+    public function __construct($text_analysis_id, $content)
     {
         $this->text_analysis_id = $text_analysis_id;
-        $this->filePath = $filePath;
+        $this->content = $content;
     }
+
     /**
      * Execute the job.
      */
     public function handle(): void
     {
         $analysis = TextAnalysis::find($this->text_analysis_id);
+
         if (!$analysis) {
             Log::error("TextAnalysis ID {$this->text_analysis_id} non trouvé pour l'analyse de plagiat.");
             return;
@@ -36,16 +41,10 @@ class ProcessAnalyzeDocument implements ShouldQueue
         Log::info("Début de l'analyse pour TextAnalysis ID: {$this->text_analysis_id}");
 
         try {
-            $flaskApiUrl = env('AI_DETECTION_API_URL', 'http://127.0.0.1:5000/check-plagiarism');
+            // $flaskApiUrl = env('AI_DETECTION_API_URL', 'http://127.0.0.1:5000/check-plagiarism');
 
-            $fileContent = file_get_contents($this->filePath);
-            Log::info("Fichier récupéré pour l'analyse: {$this->filePath}");
-
-            $response = Http::attach(
-                'file',
-                $fileContent,
-                basename($this->filePath)
-            )->post($flaskApiUrl);
+            // Appel à l'API Flask
+            $response = Http::timeout(900)->post("http://127.0.0.1:5000/check-plagiarism", ['text' => $this->content]);
 
             Log::info($response);
 
