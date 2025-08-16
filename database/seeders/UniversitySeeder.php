@@ -17,6 +17,7 @@ class UniversitySeeder extends Seeder
             [
                 'id' => 1, // Force l'ID pour mise à jour user
                 'name' => 'Université de Kinshasa',
+                'slug' => 'universite-de-kinshasa',
                 'description' => 'Grande université publique',
                 'address' => 'Kinshasa, RDC',
                 'phone' => '123456789',
@@ -26,6 +27,7 @@ class UniversitySeeder extends Seeder
             [
                 'id' => 2,
                 'name' => 'Université de Lubumbashi',
+                'slug' => 'universite-de-lubumbashi',
                 'description' => 'Université dans le Katanga',
                 'address' => 'Lubumbashi, RDC',
                 'phone' => '987654321',

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -14,8 +15,10 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::role('user')->get();
-        return view('users.index', compact('users'));
+        $users = User::where('university_id', auth()->user()->university_id)->get();
+        $roles = Role::all();
+
+        return view('vinify.users.index', compact('users', 'roles'));
     }
 
     public function sendMail($username, $email, $password)

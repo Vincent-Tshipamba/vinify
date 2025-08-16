@@ -4,7 +4,7 @@
         <div class="table-responsive">
             <table id="usersRolesTable" class="table table-bordered w-full">
                 <thead>
-                    <tr class="bg-bg-chart">
+                    <tr class="dark:bg-neutral-800">
                         <th></th>
                     </tr>
                 </thead>

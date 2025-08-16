@@ -58,7 +58,7 @@
         Consultez la liste de tous les utilisateurs enregistrés
     </h6>
 
-    
+
     @if (session('success'))
         <div class="bg-green-500 text-white p-4 rounded mb-4">
             {{ session('success') }}
@@ -66,11 +66,11 @@
     @endif
 
     <div class="flex flex-wrap">
-        <div class="border-e border-gray-200 dark:border-neutral-700">
+        <div class="border-e border-gray-200 dark:border-neutral-700 dark:bg-neutral-800 p-3">
             <nav class="flex flex-col space-y-2" aria-label="Tabs" role="tablist" aria-orientation="horizontal"
                 data-hs-tabs='{
-            "eventType": "hover"
-          }'>
+                    "eventType": "click"
+                }'>
                 <button type="button"
                     class="hs-tab-active:border-blue-500 hs-tab-active:text-blue-600 dark:hs-tab-active:text-blue-600 py-1 pe-4 inline-flex items-center gap-x-2 border-e-2 border-transparent text-sm whitespace-nowrap text-gray-500 hover:text-blue-600 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:text-blue-500 active"
                     id="open-on-hover-tab-item-1" aria-selected="true" data-hs-tab="#open-on-hover-tab-1"
@@ -92,8 +92,8 @@
             </nav>
         </div>
 
-        <div class="ms-3">
-            <div id="open-on-hover-tab-1" role="tabpanel" aria-labelledby="open-on-hover-tab-item-1">
+        <div class="ms-6">
+            <div id="open-on-hover-tab-1 w-full" role="tabpanel" aria-labelledby="open-on-hover-tab-item-1">
                 <x-users-table :users="$users" :roles="$roles"></x-users-table>
             </div>
             <div id="open-on-hover-tab-2" class="hidden" role="tabpanel" aria-labelledby="open-on-hover-tab-item-2">
@@ -565,7 +565,7 @@
                         var userRoles = response.userRoles;
 
                         // Create the table header with roles
-                        var header = '<tr class="bg-bg-chart"><th style="background-color: #d1d5db;"></th>';
+                        var header = '<tr class="dark:bg-neutral-800"><th></th>';
                         roles.forEach(function(role) {
                             header +=
                                 '<th class="text-center">' + role.name + '</th>';
@@ -668,10 +668,10 @@
 
                         // Create the table header with roles
                         var header =
-                            '<tr class="border-b dark:border-gray-700"><th style="background-color: #d1d5db;"></th>';
+                            '<tr class="border-b dark:border-gray-700 dark:bg-neutral-800"><th></th>';
                         roles.forEach(function(role) {
                             header +=
-                                '<th class="text-center"><a href="#" class="text-black dark:text-white p-2 bg-bg-chart hover:bg-gray-600" data-role-id="' +
+                                '<th class="text-center"><a href="#" class="text-black dark:text-neutral-500 p-2 bg-bg-chart hover:bg-gray-600" data-role-id="' +
                                 role.id + '" data-role-name="' + role.name + '">' + role.name + '</a></th>';
                         });
                         header += '</tr>';

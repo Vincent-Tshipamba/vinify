@@ -1,11 +1,11 @@
 @props(['users', 'roles'])
-<div class="card">
+<div class="card w-full">
     <div class="card-body">
         <div class="table-responsive">
             <table border="1" id="users-table" class="table table-striped table-bordered">
                 <thead>
                     <tr>
-                        <th>
+                        <th class="dark:bg-neutral-800">
                             <span class="flex items-center">
                                 #
                                 <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -15,7 +15,7 @@
                                 </svg>
                             </span>
                         </th>
-                        <th>
+                        <th class="dark:bg-neutral-800">
                             <span class="flex items-center">
                                 Nom d'utilisateur
                                 <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -25,7 +25,7 @@
                                 </svg>
                             </span>
                         </th>
-                        <th>
+                        <th class="dark:bg-neutral-800">
                             <span class="flex items-center">
                                 Email
                                 <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -35,7 +35,7 @@
                                 </svg>
                             </span>
                         </th>
-                        <th>
+                        <th class="dark:bg-neutral-800">
                             <span class="flex items-center">
                                 Role
                                 <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@
                                 </svg>
                             </span>
                         </th>
-                        <th>
+                        <th class="dark:bg-neutral-800">
                             <span class="flex items-center">
                                 Statut
                                 <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +55,7 @@
                                 </svg>
                             </span>
                         </th>
-                        <th>Action</th>
+                        <th class="dark:bg-neutral-800">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -122,7 +122,7 @@
                                                     5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75
                                                     0 0 0-.01-1.05z" />
                                             </svg>
-                                            Active
+                                            En ligne
                                         </span>
                                     @else
                                         <span
