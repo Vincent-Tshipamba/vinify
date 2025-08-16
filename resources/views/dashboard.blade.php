@@ -19,41 +19,44 @@
         </div>
         <div class="flex flex-wrap items-start gap-6">
             <!-- Stat block -->
-            @foreach ([['route' => 'users.index', 'title' => 'Users', 'value' => $users, 'icon' => 'users'], ['route' => 'analyses.index', 'title' => 'Analyse', 'value' => $nbrAnalyses, 'icon' => 'analyse'], ['route' => 'documents.index', 'title' => 'Fichiers', 'value' => $nbrDocuments, 'icon' => 'file']] as $stat)
+            @foreach ([['route' => 'users.index', 'permission' => 'view users', 'title' => 'Users', 'value' => $users, 'icon' => 'users'], ['route' => 'analyses.index', 'permission' => 'view analyses', 'title' => 'Analyse', 'value' => $nbrAnalyses, 'icon' => 'analyse'], ['route' => 'documents.index', 'permission' => 'view documents', 'title' => 'Fichiers', 'value' => $nbrDocuments, 'icon' => 'file']] as $stat)
                 <div class="flex flex-col items-start min-w-[120px] space-y-1">
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route($stat['route']) }}"
-                            class="bg-white/10 dark:bg-neutral-800/50 backdrop-blur-md rounded-full p-2 text-gray-600 dark:text-gray-300 hover:text-yellow-500 transition"
-                            title="{{ $stat['title'] }}">
-                            @if ($stat['icon'] === 'users')
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
-                                        d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                </svg>
-                            @elseif($stat['icon'] === 'analyse')
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M10 3v4a1 1 0 0 1-1 1H5m8 7.5 2.5 2.5M19 4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Zm-5 9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" />
-                                </svg>
-                            @elseif($stat['icon'] === 'file')
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2"
-                                        d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z" />
-                                </svg>
-                            @endif
-                        </a>
-                        <span
-                            class="text-3xl sm:text-4xl font-light text-gray-600 dark:text-gray-300">{{ $stat['value'] }}</span>
-                    </div>
-                    <span class="text-sm font-light text-gray-600 dark:text-gray-300">{{ $stat['title'] }}</span>
+
+                    @can($stat['permission'])
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route($stat['route']) }}"
+                                class="bg-white/10 dark:bg-neutral-800/50 backdrop-blur-md rounded-full p-2 text-gray-600 dark:text-gray-300 hover:text-yellow-500 transition"
+                                title="{{ $stat['title'] }}">
+
+                                @if ($stat['icon'] === 'users')
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                                            d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                @elseif($stat['icon'] === 'analyse')
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M10 3v4a1 1 0 0 1-1 1H5m8 7.5 2.5 2.5M19 4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Zm-5 9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" />
+                                    </svg>
+                                @elseif($stat['icon'] === 'file')
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z" />
+                                    </svg>
+                                @endif
+                            </a>
+                            <span
+                                class="text-3xl sm:text-4xl font-light text-gray-600 dark:text-gray-300">{{ $stat['value'] }}</span>
+                        </div>
+                        <span class="text-sm font-light text-gray-600 dark:text-gray-300">{{ $stat['title'] }}</span>
+                    @endcan
                 </div>
             @endforeach
         </div>
-
     </div>
 
 
@@ -79,20 +82,16 @@
             </div>
         </article>
         -->
-        <x-userchartline :users="$users" />
-        <x-analyseschartline :nbrAnalyses="$nbrAnalyses" :percentageCriticalPlagiarism="$percentageCriticalPlagiarism" />
-        <x-fichiersChartline :nbrDocuments="$nbrDocuments" />
+        @can('view users')
+            <x-userchartline :users="$users" />
+        @endcan
+        @can('view analyses')
+            <x-analyseschartline :nbrAnalyses="$nbrAnalyses" :percentageCriticalPlagiarism="$percentageCriticalPlagiarism" />
+        @endcan
+        @can('view documents')
+            <x-fichiersChartline :nbrDocuments="$nbrDocuments" />
+        @endcan
     </div>
-
-
-
-
-
-
-
-
-
-
 
     <footer class="relative overflow-hidden bg-neutral-900">
         <svg class="absolute -bottom-20 start-1/2 w-[1900px] transform -translate-x-1/2" width="2745" height="488"
