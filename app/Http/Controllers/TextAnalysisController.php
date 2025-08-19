@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ProcessAnalyzeDocument;
-use App\Models\Document;
-use App\Models\User;
-use App\Models\TextAnalysis;
 use Dompdf\Dompdf;
+use App\Models\User;
+use App\Models\Document;
+use Illuminate\Support\Str;
+use App\Models\TextAnalysis;
 use Illuminate\Http\Request;
 use Smalot\PdfParser\Parser;
 use PhpOffice\PhpWord\IOFactory;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\Element\Text;
+use App\Jobs\ProcessAnalyzeDocument;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class TextAnalysisController extends Controller
 {
@@ -119,44 +122,78 @@ class TextAnalysisController extends Controller
 
     public function analyzeDocument(Request $request)
     {
-        if (!$request->hasFile('text')) {
-            return response()->json(['error' => 'Aucun fichier fourni'], 400);
+        $file = null;
+        $extractedText = '';
+        $originalName = '';
+        $hash = '';
+        $fileUrl = '';
+        $path = '';
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $originalName = $file->getClientOriginalName();
+            $hash = md5_file($file->getRealPath());
+
+            $existingDocument = Document::where('file_hash', $hash)->first();
+
+            if ($existingDocument) {
+                // Document existant, on récupère le contenu et le chemin déjà stockés
+                $extractedText = $existingDocument->content;
+                $path = $existingDocument->file_url;
+            } else {
+                // C'est un nouveau document
+                $extension = strtolower($file->getClientOriginalExtension());
+                if ($extension === 'pdf') {
+                    $extractedText = $this->extractTextFromPdf($file);
+                    // On stocke le fichier original et on récupère le chemin
+                    $path = $file->store('temp_uploads', 'public');
+                } elseif (in_array($extension, ['doc', 'docx'])) {
+                    $extractedText = $this->extractTextFromWord($file);
+                    // On stocke le fichier original et on récupère le chemin pour le Job
+                    // Puis on convertit le docx en PDF pour l'affichage
+                    $path = $this->convertDocxToPdf($file);
+                    Log::info('Converted DOCX to PDF at path: ' . $path);
+                } else {
+                    return response()->json(['error' => 'Format de fichier non supporté.'], 400);
+                }
+
+                if ($extractedText === null || $path === null) {
+                    return response()->json(['error' => 'Erreur lors du traitement du document.'], 500);
+                }
+            }
+        } elseif ($request->input('text')) {
+            $text = $request->input('text');
+            $hash = md5($text);
+            $originalName = 'text-analysis-' . Str::uuid() . '.pdf';
+
+            try {
+                $pdf = new Dompdf();
+                $pdf->loadHtml(nl2br(e($text)));
+                $pdf->setPaper('A4', 'portrait');
+                $pdf->render();
+
+                $extractedText = $text;
+                $path = "temp_uploads/$originalName";
+                Storage::disk('public')->put($path, $pdf->output());
+            } catch (\Exception $e) {
+                Log::error("Erreur de conversion HTML vers PDF: " . $e->getMessage());
+                return response()->json(['error' => 'Erreur lors de la conversion du texte en PDF.'], 500);
+            }
+        } else {
+            return response()->json(['error' => 'Aucun fichier ni texte fourni'], 400);
         }
 
-        $file = $request->file('text');
-        $hash = md5_file($file->getRealPath());
-        $existingDocument = Document::where('file_hash', $hash)->first();
-
-        // if ($existingDocument) {
-        //     Log::info("Document already exists with hash: $hash");
-            // Gérer le retour pour un document déjà analysé
-            // return response()->json([
-            //     'message' => 'Ce document a déjà été analysé.',
-            //     'document_id' => $existingDocument->id,
-            //     'analysis_id' => $existingDocument->analysis->id ?? null,
-            //     'status_url' => url('/api/analysis/' . $existingDocument->analysis->id . '/status')
-            // ], 200);
-        // }
-
-        // Le chemin relatif à storage/app
-        $path = $file->store('temp_uploads', 'public');
-
-        // Le chemin absolu sur le disque du serveur
-        $fullPathOnDisk = storage_path('app/public/' . $path);
-
-        if (DIRECTORY_SEPARATOR === '\\') {
-            $fullPathOnDisk = str_replace('/', '\\', $fullPathOnDisk);
-        }
-        Log::info('Normalized path: ' . $fullPathOnDisk);
-
-        $document = Document::create([
-            'name' => $file->getClientOriginalName(),
-            'file_url' => $path, // On stocke le chemin relatif
-            'file_hash' => $hash,
-            'content' => '',
-            'has_been_analyzed' => false,
-            'user_id' => Auth::id(),
-        ]);
+        // Le hash est défini pour tous les cas, on peut donc utiliser firstOrCreate
+        $document = Document::firstOrCreate(
+            ['file_hash' => $hash],
+            [
+                'name' => $originalName,
+                'file_url' => $path,
+                'content' => $extractedText,
+                'user_id' => Auth::id(),
+                'has_been_analyzed' => false,
+            ]
+        );
 
         $analysis = TextAnalysis::create([
             'document_id' => $document->id,
@@ -170,24 +207,28 @@ class TextAnalysisController extends Controller
             'error_message' => null,
         ]);
 
+        $fullPathOnDisk = storage_path("app/public/$path");
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $fullPathOnDisk = str_replace('/', '\\', $fullPathOnDisk);
+        }
+        Log::info('Normalized path: ' . $fullPathOnDisk);
+
         // On lance le Job avec le chemin absolu sur le disque
         ProcessAnalyzeDocument::dispatch($analysis->id, $fullPathOnDisk);
+
+        // On génère l'URL publique juste avant de la renvoyer
+        $fileUrl = Storage::url($path);
 
         return response()->json([
             'message' => 'L\'analyse de votre document est en cours.',
             'analysis_id' => $analysis->id,
             'document_id' => $document->id,
+            'text' => $extractedText,
+            'file_url' => $fileUrl,
             'status_url' => url('/api/analysis/' . $analysis->id . '/status')
         ], 202);
     }
-
-    /**
-     * Récupère le statut et les résultats d'une analyse.
-     * Utilisé pour le polling côté client.
-     *
-     * @param TextAnalysis $analysis L'instance de l'analyse récupérée par route model binding.
-     * @return \Illuminate\Http\JsonResponse
-     */
+    
     public function getAnalysisStatus(TextAnalysis $analysis)
     {
         if (!$analysis) {
@@ -206,7 +247,7 @@ class TextAnalysisController extends Controller
             'is_ai_generated' => $analysis->is_ai_generated,
             'ai_generated_label' => $analysis->ai_generated_label,
             'highlighted_text' => $analysis->highlighted_text,
-            'similarities_details' => $analysis->similarities,
+            'similarities_details' => json_decode($analysis->similarities),
             'excerpted_text' => $analysis->excerpted_text,
             'error_message' => $analysis->error_message,
             'created_at' => $analysis->created_at,
@@ -215,29 +256,40 @@ class TextAnalysisController extends Controller
         return response()->json($data);
     }
 
-    private function convertDocxToPdf($file, $pdfPath){
-        // Charger le document Word
-        $phpWord = IOFactory::load($file->getRealPath());
+    private function convertDocxToPdf(UploadedFile $file)
+    {
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $pdfPath = 'temp_uploads/' . $originalName . '_' . Str::uuid() . '.pdf';
 
-        // Sauvegarder temporairement en HTML
-        $tempHtml = tempnam(sys_get_temp_dir(), 'docx_html_') . '.html';
-        $xmlWriter = IOFactory::createWriter($phpWord, 'HTML');
-        $xmlWriter->save($tempHtml);
+        try {
+            // Charger le document Word
+            $phpWord = IOFactory::load($file->getRealPath());
 
-        // Lire le HTML
-        $htmlContent = file_get_contents($tempHtml);
+            // Sauvegarder temporairement en HTML
+            $tempHtml = tempnam(sys_get_temp_dir(), 'docx_html_') . '.html';
+            $xmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+            $xmlWriter->save($tempHtml);
 
-        // Convertir en PDF avec Dompdf
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($htmlContent);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
+            // Lire le HTML
+            $htmlContent = file_get_contents($tempHtml);
 
-        // Sauvegarder le dPDF
-        file_put_contents($pdfPath, $dompdf->output());
+            // Convertir en PDF avec Dompdf
+            $dompdf = new Dompdf();
+            $dompdf->loadHtml($htmlContent);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
 
-        // Nettoyer le fichier HTML temporaire
-        @unlink($tempHtml);
+            // Sauvegarder le PDF dans le stockage public de Laravel
+            Storage::disk('public')->put($pdfPath, $dompdf->output());
+
+            // Nettoyer le fichier HTML temporaire
+            @unlink($tempHtml);
+
+            return $pdfPath;
+        } catch (\Exception $e) {
+            Log::error("Erreur de conversion DOCX vers PDF : " . $e->getMessage());
+            return null;
+        }
     }
 
     public function extractText(Request $request)
@@ -253,7 +305,7 @@ class TextAnalysisController extends Controller
             // verifier si le fichier a déjà été uploadé
             $hash = md5_file($file->getRealPath());
             $existingDocument = Document::where('file_hash', $hash)->first();
-            
+
             if ($existingDocument) {
                 Log::info("Document already exists with hash: $hash");
                 return response()->json([
@@ -265,9 +317,9 @@ class TextAnalysisController extends Controller
 
             $path = $file->store('uploads', 'public');
 
-            $fileUrl = asset('/storage/uploads/' . basename($path));
+            $fullPathOnDisk = asset('/storage/uploads/' . basename($path));
             $fileName = $file->getClientOriginalName();
-            Log::info("File url : $fileUrl");
+            Log::info("File url : $fullPathOnDisk");
             switch ($extension) {
                 case 'pdf':
                     $text = $this->extractTextFromPdf($file);
@@ -278,7 +330,7 @@ class TextAnalysisController extends Controller
                     // Générer le PDF
                     $pdfFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.pdf';
                     $pdfPath = storage_path("app/public/uploads/$pdfFileName");
-                    $this->convertDocxToPdf($file, $pdfPath);
+                    $this->convertDocxToPdf($file);
 
                     // Générer l'URL du PDF
                     $pdfUrl = asset("storage/uploads/$pdfFileName");
@@ -312,7 +364,7 @@ class TextAnalysisController extends Controller
 
             return response()->json([
                 'text' => $text,
-                'file_url' =>$fileUrl,
+                'file_url' => $fileUrl,
                 'document_id' => $document->id,
             ], 200);
         } catch (\Exception $e) {

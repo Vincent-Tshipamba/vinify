@@ -10,6 +10,45 @@
             border-radius: 3px;
             text-decoration: underline;
         }
+
+        .loader-dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-dots span {
+            width: 10px;
+            height: 10px;
+            margin: 0 4px;
+            background-color: #2563eb;
+            /* Couleur bleue Tailwind */
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loader-dots .dot-2 {
+            animation-delay: -0.32s;
+        }
+
+        .loader-dots .dot-3 {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+                background-color: #2563eb;
+            }
+
+            40% {
+                transform: scale(1.0);
+                background-color: #60a5fa;
+            }
+        }
     </style>
 
     <div class="py-10 lg:py-14">
@@ -41,23 +80,19 @@
         <p class="text-white mt-2">Analyse en cours...</p>
     </div>
 
+    <div id="analyze-loader" style="display: none;" class="analyze-loader justify-center items-center my-4">
+        <div class="loader-dots">
+            <span class="dot-1"></span>
+            <span class="dot-2"></span>
+            <span class="dot-3"></span>
+        </div>
+        <p class="ml-3 text-white">Analyse en cours, cela peut prendre un moment...</p>
+    </div>
+
     <!-- Textarea -->
     <div
         class="max-w-4xl mx-auto sticky bottom-0 z-10 p-4 sm:py-6 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md border-t border-gray-200 dark:border-neutral-700">
         <!-- Sidebar Toggle (mobile) -->
-        <div class="lg:hidden flex justify-end mb-2 sm:mb-4">
-            <button type="button"
-                class="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 shadow hover:bg-gray-50 focus:outline-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700"
-                aria-label="Ouvrir la navigation" data-hs-overlay="#hs-application-sidebar">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" x2="21" y1="6" y2="6" />
-                    <line x1="3" x2="21" y1="12" y2="12" />
-                    <line x1="3" x2="21" y1="18" y2="18" />
-                </svg>
-                <span>Menu</span>
-            </button>
-        </div>
 
         <!-- Zone de saisie -->
         <div class="relative">
@@ -191,26 +226,22 @@
             let file = event.target.files[0];
             const textArea = document.getElementById("textArea");
             const submitButton = document.getElementById("analyzeBtn");
-            const loading = document.getElementById("loadinginput");
-
-            // Ajuster la hauteur du textarea
-            textArea.addEventListener("input", function() {
-                this.style.height = "auto";
-                this.style.height = (this.scrollHeight) + "px";
-                submitButton.disabled = this.value.trim() === "";
-            });
+            const loadingAnalysis = document.getElementById("analyze-loader");
+            let viewBox = document.getElementById("viewBox");
+            $('.uploading-loader').css("display", "flex");
 
             if (file) {
                 let formData = new FormData();
-                formData.append('text', file);
+                formData.append('file', file);
 
                 let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                 // Afficher le spinner et désactiver le bouton
-                loading.classList.remove("hidden");
+                $('#loadinginput').css("display", "flex");
                 submitButton.disabled = true;
 
-                // **MODIFICATION ICI** : on appelle directement la nouvelle route d'analyse
+                document.getElementById("viewBox").innerHTML = "";
+
                 fetch('/analyze-document', {
                         method: 'POST',
                         body: formData,
@@ -220,37 +251,65 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.info(data);
+                        console.log('Job dispatch response:', data);
+                        $('.analyze-loader').css("display", "flex");
+
+
+                        let statusMessageDiv = document.createElement('div');
+                        statusMessageDiv.id = 'analysis-status-message'; // Give it an ID to update later
+                        statusMessageDiv.className = 'max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4';
                         if (data.error) {
                             Swal.fire("Erreur", data.error, "error");
                         } else {
-                            // L'API back-end renvoie directement le documentId et l'analysis_id
-                            // On peut le stocker pour le suivi du statut.
                             window.documentId = data.document_id;
                             window.analysisId = data.analysis_id;
-
-                            Swal.fire({
-                                title: "Analyse en cours",
-                                html: data.message,
-                                icon: "info",
-                                timer: 5000,
-                                showConfirmButton: false
-                            });
-
-                            // Optionnel : Vous pouvez aussi vider le textarea
+                            const extrait = data.text ? data.text.substring(0, 500) + (data.text.length > 500 ?
+                                "..." : "") : "";
+                            const fileUrl = data.file_url
+                            const extension = fileUrl.split('.').pop().toLowerCase();
                             textArea.value = "";
                             textArea.dispatchEvent(new Event('input'));
+
+                            viewBox.innerHTML += `
+                                <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
+                                    <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-600">
+                                        <span class="text-sm font-medium text-white">AZ</span>
+                                    </span>
+                                    <div class="max-w-4xl mx-auto sticky bottom-0 z-10 p-4 sm:py-5 bg-white/10 dark:bg-neutral-800/50 backdrop-blur-lg border-t border-gray-200 dark:border-neutral-700 shadow-md rounded-xl">
+                                        <div class="max-w-2xl flex gap-x-2 sm:gap-x-4">
+                                            <div id="answer" class="grow mt-2 space-y-3">
+                                                <p class="text-white  text-sm">${extrait}</p>
+                                                <div class="grow">
+                                                    <button type="button" class="voir-plus-btn mt-2 py-1 px-3 rounded bg-yellow-300 text-gray-900" data-file="${fileUrl}" data-file-extension="${extension}">Voir le document en entier</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+
+                            statusMessageDiv.innerHTML = `
+                                <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
+                                    Contenu soumis avec succès. Veuillez patienter pendant l'analyse...
+                                </p>
+                            `;
+                            viewBox.appendChild(statusMessageDiv);
+                        }
+
+                        if (data.analysis_id) {
+                            listenForAnalysisResults(data.analysis_id, statusMessageDiv, viewBox,
+                                loadingAnalysis);
+                        } else {
+                            alert('Erreur: L\'ID d\'analyse n\'a pas été renvoyé.');
                         }
                     })
                     .catch(error => {
-                        console.error('Erreur:', JSON.stringify(error));
+                        console.error('Erreur:', error);
                         Swal.fire("Erreur", "Une erreur s'est produite lors de l'analyse.", "error");
                     })
                     .finally(() => {
-                        loading.classList.add("hidden");
-                        // Le bouton sera réactivé une fois le texte entré manuellement
-                        // ou si l'API a renvoyé une erreur qui permet de réessayer.
-                        submitButton.disabled = false;
+                        $('#loadinginput').css("display", "none");
+                        $('#analyze-loader').css("display", "none");
                     });
             }
         });
@@ -281,268 +340,84 @@
         document.getElementById("analyzeBtn").addEventListener("click", function() {
             let textArea = document.getElementById("textArea");
             let text = textArea.value.trim();
-            let resultDiv = document.getElementById("result");
-            let answerDiv = document.getElementById("answer");
-            let viewBox = document.getElementById("viewBox");
-            let loader = document.getElementById("loading"); // Récupération du loader
-            const extrait = text ? text.substring(0, 500) + (text.length > 500 ? "..." : "") : "";
-            const fileUrl = window.lastUploadedFileUrl || "";
-            const extension = window.lastUploadedFileExtension || "";
             if (!text) {
                 alert("Veuillez entrer du texte avant l'analyse.");
                 return;
             }
+            const submitButton = document.getElementById("analyzeBtn");
+            const loadingAnalysis = document.getElementById("analyze-loader");
+            let viewBox = document.getElementById("viewBox");
 
-            // Afficher le texte analysé
-            viewBox.innerHTML += `
-                    <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
-                        <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-600">
-                            <span class="text-sm font-medium text-white">AZ</span>
-                        </span>
-                        <div class="max-w-4xl mx-auto sticky bottom-0 z-10 p-4 sm:py-5 bg-white/10 dark:bg-neutral-800/50 backdrop-blur-lg border-t border-gray-200 dark:border-neutral-700 shadow-md rounded-xl">
-                            <div class="max-w-2xl flex gap-x-2 sm:gap-x-4">
-                                <div id="answer" class="grow mt-2 space-y-3">
-                                    <p class="text-white  text-sm">${extrait}</p>
-                                    <div class="grow">
-                                        <button type="button" class="voir-plus-btn mt-2 py-1 px-3 rounded bg-yellow-300 text-gray-900" data-file="${fileUrl}" data-file-extension="${extension}">Voir le document en entier</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-            `;
-            let statusMessageDiv = document.createElement('div');
-            statusMessageDiv.id = 'analysis-status-message'; // Give it an ID to update later
-            statusMessageDiv.className = 'max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4';
-            statusMessageDiv.innerHTML = `
-                <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
-                    Contenu soumis avec succès. Veuillez patienter pendant l'analyse...
-                </p>
-            `;
-            viewBox.appendChild(statusMessageDiv);
-            textArea.value = "";
-            textArea.style.height = "auto";
+            let formData = new FormData();
+            formData.append('text', text);
 
-            // Afficher le loader et désactiver le bouton
-            loader.style.display = "block";
-            document.getElementById("analyzeBtn").disabled = true;
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            fetch("/plagiarism-check", {
-                    method: "POST",
+            submitButton.disabled = true;
+
+            document.getElementById("viewBox").innerHTML = "";
+
+            fetch('/analyze-document', {
+                    method: 'POST',
+                    body: formData,
                     headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            "content")
-                    },
-                    body: JSON.stringify({
-                        text: text,
-                        documentId: window.documentId,
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // If response is not 2xx, throw an error
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Server error');
-                        });
+                        'X-CSRF-TOKEN': csrfToken
                     }
-                    return response.json();
                 })
+                .then(response => response.json())
                 .then(data => {
                     console.log('Job dispatch response:', data);
 
-                    document.getElementById("viewBox").innerHTML += `
-                        <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
-                            <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
-                                ${data.message}
-                            </p>
-                        </div>
-                    `;
+                    $('#analyze-loader').css("display", "flex");
+                    if (data.error) {
+                        console.error(data.error);
+                        Swal.fire("Erreur", data.error, "error");
+                        $('#analyze-loader').css("display", "none");
+                        submitButton.disabled = false;
+                    } else {
+                        window.documentId = data.document_id;
+                        window.analysisId = data.analysis_id;
+                        const extrait = data.text ? data.text.substring(0, 500) + (data.text.length > 500 ?
+                            "..." : "") : "";
+                        const fileUrl = data.file_url
+                        const extension = fileUrl.split('.').pop().toLowerCase();
+                        textArea.value = "";
+                        textArea.dispatchEvent(new Event('input'));
+
+                        viewBox.innerHTML += `
+                                <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
+                                    <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-600">
+                                        <span class="text-sm font-medium text-white">AZ</span>
+                                    </span>
+                                    <div class="max-w-4xl mx-auto sticky bottom-0 z-10 p-4 sm:py-5 bg-white/10 dark:bg-neutral-800/50 backdrop-blur-lg border-t border-gray-200 dark:border-neutral-700 shadow-md rounded-xl">
+                                        <div class="max-w-2xl flex gap-x-2 sm:gap-x-4">
+                                            <div id="answer" class="grow mt-2 space-y-3">
+                                                <p class="text-white  text-sm">${extrait}</p>
+                                                <div class="grow">
+                                                    <button type="button" class="voir-plus-btn mt-2 py-1 px-3 rounded bg-yellow-300 text-gray-900" data-file="${fileUrl}" data-file-extension="${extension}">Voir le document en entier</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                    }
+
+                    const statusMessageDiv = document.getElementById("viewBox");
                     if (data.analysis_id) {
-                        listenForAnalysisResults(data.analysis_id, statusMessageDiv, viewBox, loader);
+                        listenForAnalysisResults(data.analysis_id, statusMessageDiv, loadingAnalysis,
+                            submitButton);
                     } else {
                         alert('Erreur: L\'ID d\'analyse n\'a pas été renvoyé.');
-                        resetUI(loader);
                     }
                 })
                 .catch(error => {
-                    console.error("Erreur:", error);
-                    viewBox.innerHTML +=
-                        `
-                        <li class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4">
-                            <span class="shrink-0 inline-flex items-center justify-center size-9.5 rounded-full bg-gray-800">
-                                    <span class="text-sm font-medium text-white">JC</span>
-                                </span>
-                            <div class="grow max-w-[90%] md:max-w-2xl w-full space-y-3">
-                                <!-- End Card -->
-
-                                <div id="result"
-                                    class="mt-3 flex-none min-w-full bg-gray-800 font-mono text-sm p-5 rounded-lg dark:bg-neutral-800 dark:text-neutral-200">
-                                    <strong>Erreur :</strong> Impossible d'analyser le texte.${error}
-                                </div>
-
-                                <!-- Button Group -->
-                                <div>
-                                    <div class="sm:flex sm:justify-between">
-                                        <div>
-                                            <div
-                                                class="inline-flex border border-gray-200 rounded-full p-0.5 dark:border-neutral-700">
-                                                <button type="button"
-                                                    class="inline-flex shrink-0 justify-center items-center size-8 rounded-full text-gray-500 hover:bg-blue-100 hover:text-blue-800 focus:z-10 focus:outline-hidden focus:bg-blue-100 focus:text-blue-800 dark:text-neutral-500 dark:hover:bg-blue-900 dark:hover:text-blue-200 dark:focus:bg-blue-900 dark:focus:text-blue-200">
-                                                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
-                                                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M7 10v12" />
-                                                        <path
-                                                            d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
-                                                    </svg>
-                                                </button>
-                                                <button type="button"
-                                                    class="inline-flex shrink-0 justify-center items-center size-8 rounded-full text-gray-500 hover:bg-blue-100 hover:text-blue-800 focus:z-10 focus:outline-hidden focus:bg-blue-100 focus:text-blue-800 dark:text-neutral-500 dark:hover:bg-blue-900 dark:hover:text-blue-200 dark:focus:bg-blue-900 dark:focus:text-blue-200">
-                                                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
-                                                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M17 14V2" />
-                                                        <path
-                                                            d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                            <button type="button"
-                                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
-                                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
-                                                    height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M17 14V2" />
-                                                    <path
-                                                        d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
-                                                </svg>
-                                                Copy
-                                            </button>
-                                            <button type="button"
-                                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
-                                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
-                                                    height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <circle cx="18" cy="5" r="3" />
-                                                    <circle cx="6" cy="12" r="3" />
-                                                    <circle cx="18" cy="19" r="3" />
-                                                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
-                                                    <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
-                                                </svg>
-                                                Share
-                                            </button>
-                                        </div>
-
-                                        <div class="mt-1 sm:mt-0">
-                                            <button type="button"
-                                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
-                                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
-                                                    height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-                                                    <path d="M21 3v5h-5" />
-                                                </svg>
-                                                New answer
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- End Button Group -->
-                            </div>
-                        </li>
-                        <p class="text-red-400"></p>
-
-                        `;
+                    console.error('Erreur:', error);
+                    Swal.fire("Erreur", "Une erreur s'est produite lors de l'analyse.", "error");
                 })
                 .finally(() => {
-                    // Cacher le loader et réactiver le bouton après la requête
-                    // loader.style.display = "none";
-                    document.getElementById("analyzeBtn").disabled = false;
+                    // loadingAnalysis.classList.add("hidden");
                 });
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const dropZone = document.getElementById('textArea');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            // Prévenir le comportement par défaut (ouverture du fichier dans le navigateur)
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            // Gérer les effets visuels de glisser-déposer
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight(e) {
-                dropZone.classList.add('bg-blue-200', 'border-blue-500');
-                dropZone.classList.remove('bg-gray-100', 'border-gray-200');
-            }
-
-            function unhighlight(e) {
-                dropZone.classList.remove('bg-blue-200', 'border-blue-500');
-                dropZone.classList.add('bg-gray-100', 'border-gray-200');
-            }
-
-            // Gérer l'événement de dépôt
-            dropZone.addEventListener('drop', handleDrop, false);
-
-            async function handleDrop(e) {
-                const files = e.dataTransfer.files;
-                if (files.length === 0) return;
-
-                const file = files[0];
-
-                // Créer un objet FormData et y ajouter le fichier
-                const formData = new FormData();
-                formData.append('text', file); // 'text' est le nom du champ de fichier attendu par Laravel
-
-                try {
-                    // Envoyer le fichier au back-end en une seule étape
-                    const response = await fetch('/analyze-document', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken
-                        }
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Erreur lors de l\'analyse du document.');
-                    }
-
-                    const data = await response.json();
-                    console.log(data);
-
-                    // Vous pouvez afficher le message de succès à l'utilisateur ici
-                    alert(data.message);
-
-                    // Mettez à jour l'interface utilisateur pour le polling si nécessaire
-
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    alert(`Erreur: ${error.message}`);
-                }
-            }
-
-            // Gestion de la saisie directe dans le textarea (si nécessaire)
-            // Vous pouvez ajouter une logique pour soumettre le texte directement
-            // si l'utilisateur saisit du contenu au lieu de déposer un fichier.
-            // Cette partie dépend de votre logique métier.
-            // Par exemple, un bouton "Soumettre" qui prendrait le contenu du textarea.
-
         });
 
         function listenForAnalysisResults(analysisId, statusMessageDiv, resultsContainerDiv, loaderElement) {
@@ -553,6 +428,7 @@
                 window.Echo.leave(`plagiarism-analysis.${analysisId}`);
             } else {
                 console.warn('Laravel Echo n\'est pas initialisé. Le broadcasting ne fonctionnera pas.');
+                $('.analyze-loader').css("display", "none");
                 return;
             }
 
@@ -560,6 +436,7 @@
             window.Echo.channel(`plagiarism-analysis.${analysisId}`)
                 .listen('.analysis-completed', (e) => {
                     console.log('Analysis completed event received:', e);
+                    $('.analyze-loader').css("display", "none");
                     let statusText = '';
                     let statusColorClass = '';
                     const textAnalysisId = e.textAnalysisId;
@@ -573,7 +450,7 @@
                         statusColorClass = 'text-red-500';
                     }
 
-                    statusMessageDiv.innerHTML = `
+                    statusMessageDiv.innerHTML += `
                             <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent ${statusColorClass} dark:text-neutral-400 dark:bg-neutral-800">
                                 ${statusText}
                             </p>
@@ -597,9 +474,10 @@
                             return response.json();
                         })
                         .then(analysisData => {
-                            window.similaritiesList = analysisData.similarities || [];
                             console.log('Full analysis data retrieved from API:', analysisData);
-
+                            console.log('Similarities details:', analysisData.similarities_details);
+                            window.similaritiesList = analysisData.similarities_details || [];
+                            $('.analyze-loader').css("display", "none");
                             displayAnalysisResults(textAnalysisId, analysisData, resultsContainerDiv);
 
                             // Déclencher la notification pour l'utilisateur
@@ -643,7 +521,8 @@
         }
 
         function displayAnalysisResults(textAnalysisId, data, resultsContainerDiv) {
-            const similarities = data.similarities;
+            const similarities = data.similarities_details;
+            console.log('Similarities:', similarities);
             const highlightedText = data.highlighted_text || "Aucun texte mis en surbrillance.";
             const isAiGenerated = data.is_ai_generated;
             const aiGeneratedProbability = data.ai_generated_probability || 0;
@@ -654,7 +533,7 @@
                 excerpts.forEach(ex => {
                     resultsContainerDiv.innerHTML += `
                         <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
-                            <p class="py-3 px-3 rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
+                            <p class="py-6 px-6 w-full rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
                                 ${ex.highlighted}
                             </p>
                         </div>
@@ -665,11 +544,6 @@
                     <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
                         <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent text-blue-500 dark:text-neutral-400 dark:bg-neutral-800">
                             <strong>Pourcentage de plagiat en ligne : </strong>${plagiarismPercentage.toFixed(1)}%
-                        </p>
-                    </div>
-                    <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto mt-4">
-                        <p class="py-2 px-3 rounded-full border border-transparent dark:text-neutral-400 dark:bg-neutral-800">
-                            ${isAiGenerated ? `La probabilité que ce texte soit généré par une IA est de <strong>${aiGeneratedProbability.toFixed(2)}%</strong>.` : `Ce texte est original à une probabilité de <strong>${aiGeneratedProbability.toFixed(1)}%</strong>.`}
                         </p>
                     </div>
                 `;
