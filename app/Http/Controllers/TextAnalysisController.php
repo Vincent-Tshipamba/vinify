@@ -214,7 +214,7 @@ class TextAnalysisController extends Controller
         Log::info('Normalized path: ' . $fullPathOnDisk);
 
         // On lance le Job avec le chemin absolu sur le disque
-        ProcessAnalyzeDocument::dispatch($analysis->id, $fullPathOnDisk);
+        ProcessAnalyzeDocument::dispatch($analysis->id, $extractedText);
 
         // On génère l'URL publique juste avant de la renvoyer
         $fileUrl = Storage::url($path);

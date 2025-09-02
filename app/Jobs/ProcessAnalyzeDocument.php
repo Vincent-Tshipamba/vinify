@@ -14,12 +14,13 @@ class ProcessAnalyzeDocument implements ShouldQueue
 {
     use Queueable;
     public $text_analysis_id;
-    public $filePath; // Stocke maintenant le chemin du fichier, et non le texte
+    // public $filePath;
+    public $extractedText;
 
-    public function __construct($text_analysis_id, $filePath)
+    public function __construct($text_analysis_id, $extractedText)
     {
         $this->text_analysis_id = $text_analysis_id;
-        $this->filePath = $filePath;
+        $this->extractedText = $extractedText;
     }
     /**
      * Execute the job.
@@ -38,14 +39,9 @@ class ProcessAnalyzeDocument implements ShouldQueue
         try {
             $flaskApiUrl = env('AI_DETECTION_API_URL', 'http://127.0.0.1:5000/check-plagiarism');
 
-            $fileContent = file_get_contents($this->filePath);
-            Log::info("Fichier récupéré pour l'analyse: {$this->filePath}");
-
-            $response = Http::attach(
-                'file',
-                $fileContent,
-                basename($this->filePath)
-            )->post($flaskApiUrl);
+            $response = Http::timeout(50)->post($flaskApiUrl, [
+                'text' => $this->extractedText,
+            ]);
 
             Log::info($response);
 
@@ -59,7 +55,14 @@ class ProcessAnalyzeDocument implements ShouldQueue
                 $aiGeneratedProbability = $result['ai_generated_probability'] ?? 0;
                 $isAiGenerated = $result['is_ai_generated'] ?? false;
                 $plagiarismPercentage = $resultData['plagiarism_percentage'] ?? 0;
-
+                Log::info("Analyse de plagiat réussie pour TextAnalysis ID: {$this->text_analysis_id}", [
+                    'plagiarism_percentage' => $plagiarismPercentage,
+                    'excerpted_text' => $excerptedText,
+                    'similarities' => $similaritiesData,
+                    // 'highlighted_text' => $highlightedText,
+                    'ai_generated_probability' => $aiGeneratedProbability,
+                    'is_ai_generated' => $isAiGenerated,
+                ]);
                 $analysis->update([
                     'plagiarism_percentage' => $plagiarismPercentage,
                     'excerpted_text' => $excerptedText,
@@ -129,11 +132,11 @@ class ProcessAnalyzeDocument implements ShouldQueue
      * Définit le nombre de secondes pendant lesquelles le job peut s'exécuter avant d'expirer.
      * @var int
      */
-    public $timeout = 1000;
+    public $timeout = 50000;
 
     /**
      * Le nombre de fois que le job peut être retenté.
      * @var int
      */
-    public $tries = 3;
+    public $tries = 2;
 }
