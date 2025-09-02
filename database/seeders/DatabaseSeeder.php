@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             SubscriptionSeeder::class,
             UserSeeder::class,
             UniversitySeeder::class,
+            RolesPermissionsSeeder::class,
         ]);
 
         // Mise à jour des users avec leur université

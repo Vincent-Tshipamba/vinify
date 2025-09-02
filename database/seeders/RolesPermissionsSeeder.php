@@ -31,8 +31,8 @@ class RolesPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'analyze documents']);
         Permission::firstOrCreate(['name' => 'view reports']);
         Permission::firstOrCreate(['name' => 'export data']);
-        Permission::firstOrCreate(['name' => 'view settings']);
         Permission::firstOrCreate(['name' => 'manage settings']);
+        Permission::firstOrCreate(['name' => 'view settings']);
 
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $userRole = Role::firstOrCreate(['name' => 'user']);

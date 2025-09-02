@@ -19,7 +19,7 @@
         </div>
         <div class="flex flex-wrap items-start gap-6">
             <!-- Stat block -->
-            @foreach ([['route' => 'users.index', 'permission' => 'view users', 'title' => 'Users', 'value' => $users, 'icon' => 'users'], ['route' => 'analyses.index', 'permission' => 'view analyses', 'title' => 'Analyse', 'value' => $nbrAnalyses, 'icon' => 'analyse'], ['route' => 'documents.index', 'permission' => 'view documents', 'title' => 'Fichiers', 'value' => $nbrDocuments, 'icon' => 'file']] as $stat)
+            @foreach ([['route' => 'users.index', 'permission' => 'manage users', 'title' => 'Users', 'value' => $users, 'icon' => 'users'], ['route' => 'analyses.index', 'permission' => 'view analyses', 'title' => 'Analyse', 'value' => $nbrAnalyses, 'icon' => 'analyse'], ['route' => 'documents.index', 'permission' => 'manage documents', 'title' => 'Fichiers', 'value' => $nbrDocuments, 'icon' => 'file']] as $stat)
                 <div class="flex flex-col items-start min-w-[120px] space-y-1">
 
                     @can($stat['permission'])
@@ -82,13 +82,13 @@
             </div>
         </article>
         -->
-        @can('view users')
+        @can('manage users')
             <x-userchartline :users="$users" />
         @endcan
         @can('view analyses')
             <x-analyseschartline :nbrAnalyses="$nbrAnalyses" :percentageCriticalPlagiarism="$percentageCriticalPlagiarism" />
         @endcan
-        @can('view documents')
+        @can('manage documents')
             <x-fichiersChartline :nbrDocuments="$nbrDocuments" />
         @endcan
     </div>
