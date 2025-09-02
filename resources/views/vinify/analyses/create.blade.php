@@ -21,7 +21,7 @@
             width: 10px;
             height: 10px;
             margin: 0 4px;
-            background-color: #2563eb;
+            background-color: #ff0;
             /* Couleur bleue Tailwind */
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
@@ -41,12 +41,12 @@
             80%,
             100% {
                 transform: scale(0);
-                background-color: #2563eb;
+                background-color: #ff0;
             }
 
             40% {
                 transform: scale(1.0);
-                background-color: #60a5fa;
+                background-color: #ff0;
             }
         }
     </style>
@@ -87,6 +87,14 @@
             <span class="dot-3"></span>
         </div>
         <p class="ml-3 text-white">Analyse en cours, cela peut prendre un moment...</p>
+    </div>
+    <div id="" style="display: none;" class="display-results-loader justify-center items-center my-4">
+        <div class="loader-dots">
+            <span class="dot-1"></span>
+            <span class="dot-2"></span>
+            <span class="dot-3"></span>
+        </div>
+        <p class="ml-3 text-white">Affichage des résultats d'analyse en cours...</p>
     </div>
 
     <!-- Textarea -->
@@ -240,7 +248,7 @@
                 $('#loadinginput').css("display", "flex");
                 submitButton.disabled = true;
 
-                document.getElementById("viewBox").innerHTML = "";
+                // document.getElementById("viewBox").innerHTML = "";
 
                 fetch('/analyze-document', {
                         method: 'POST',
@@ -252,8 +260,6 @@
                     .then(response => response.json())
                     .then(data => {
                         console.log('Job dispatch response:', data);
-                        $('.analyze-loader').css("display", "flex");
-
 
                         let statusMessageDiv = document.createElement('div');
                         statusMessageDiv.id = 'analysis-status-message'; // Give it an ID to update later
@@ -261,6 +267,7 @@
                         if (data.error) {
                             Swal.fire("Erreur", data.error, "error");
                         } else {
+                            $('.analyze-loader').css("display", "flex");
                             window.documentId = data.document_id;
                             window.analysisId = data.analysis_id;
                             const extrait = data.text ? data.text.substring(0, 500) + (data.text.length > 500 ?
@@ -308,8 +315,8 @@
                         Swal.fire("Erreur", "Une erreur s'est produite lors de l'analyse.", "error");
                     })
                     .finally(() => {
+                        $('.analyze-loader').css("display", "flex");
                         $('#loadinginput').css("display", "none");
-                        $('#analyze-loader').css("display", "none");
                     });
             }
         });
@@ -436,7 +443,6 @@
             window.Echo.channel(`plagiarism-analysis.${analysisId}`)
                 .listen('.analysis-completed', (e) => {
                     console.log('Analysis completed event received:', e);
-                    $('.analyze-loader').css("display", "none");
                     let statusText = '';
                     let statusColorClass = '';
                     const textAnalysisId = e.textAnalysisId;
@@ -446,8 +452,19 @@
                         statusText = 'Analyse terminée avec succès ✅';
                         statusColorClass = 'text-green-500';
                     } else {
-                        statusText = `Analyse échouée ❌`;
+                        statusText = `Analyse échouée, une erreur s'est produite ! ❌`;
                         statusColorClass = 'text-red-500';
+
+                        statusMessageDiv.innerHTML += `
+                            <p class="py-2 px-3 inline-flex items-center gap-x-2 text-sm rounded-full border border-transparent ${statusColorClass} dark:text-neutral-400 dark:bg-neutral-800">
+                                ${statusText}
+                            </p>
+                        `;
+
+                        showBrowserNotification("Erreur d'analyse",
+                                `Une erreur s'est produite lors de l'analyse (ID: ${textAnalysisId}).`
+                            );
+                        return; // Ne pas continuer si l'analyse a échoué
                     }
 
                     statusMessageDiv.innerHTML += `
@@ -455,6 +472,9 @@
                                 ${statusText}
                             </p>
                         `;
+
+                    $('.analyze-loader').css("display", "none");
+                    $('.display-results-loader').css("display", "flex");
 
                     fetch(`/api/analysis/${textAnalysisId}/status`, {
                             method: "GET",
@@ -477,7 +497,7 @@
                             console.log('Full analysis data retrieved from API:', analysisData);
                             console.log('Similarities details:', analysisData.similarities_details);
                             window.similaritiesList = analysisData.similarities_details || [];
-                            $('.analyze-loader').css("display", "none");
+                            $('.display-results-loader').css("display", "none");
                             displayAnalysisResults(textAnalysisId, analysisData, resultsContainerDiv);
 
                             // Déclencher la notification pour l'utilisateur
